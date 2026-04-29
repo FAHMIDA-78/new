@@ -46,9 +46,8 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 warnings.filterwarnings('ignore')
 
-# ==============================================================================
+
 # ENHANCED EXCEL PARSER WITH FORMULA SUPPORT
-# ==============================================================================
 
 def parse_excel_with_formula_support(file_path):
     """
@@ -582,9 +581,8 @@ def extract_po_attainment_data(wb, co_attainment, co_po_mapping):
     
     return po_attainment
 
-# ==============================================================================
+
 # SPIDER/RADAR PLOT FUNCTIONS
-# ==============================================================================
 
 def create_spider_plot(categories, values, title="Spider Plot", color='#667eea'):
     """Create a spider/radar plot for CO or PO attainment"""
@@ -656,9 +654,8 @@ def create_comparison_spider_plot(categories, student_values, class_values, stud
     plt.tight_layout()
     return fig
 
-# ==============================================================================
-# SIMPLIFIED STREAMLIT APP WITH ALL FEATURES
-# ==============================================================================
+
+# APP FEATURES
 
 def create_streamlit_app():
     """Main Streamlit application with all features"""
@@ -713,12 +710,12 @@ def create_streamlit_app():
     st.sidebar.title("Navigation")
     page = st.sidebar.radio(
         "Select Page",
-        ["📤 Upload & Process", "👨‍🎓 Student Analytics", "👨‍🏫 Faculty Dashboard", 
-         "📊 Class Overview", "📧 Email Reports", "👑 Admin Panel"]
+        [" Upload & Process", "Student Analytics", " Faculty Dashboard", 
+         " Class Overview", " Email Reports", " Admin Panel"]
     )
     
     # File upload section (available on multiple pages)
-    if page in ["📤 Upload & Process", "👨‍🎓 Student Analytics", "📊 Class Overview"]:
+    if page in [" Upload & Process", " Student Analytics", " Class Overview"]:
         st.sidebar.markdown("---")
         uploaded_file = st.sidebar.file_uploader(
             "Upload Excel File",
@@ -737,25 +734,25 @@ def create_streamlit_app():
                     st.session_state.parsed_data = parse_excel_with_formula_support("temp_upload.xlsx")
             
             if st.session_state.parsed_data:
-                st.sidebar.success("✅ File processed successfully!")
+                st.sidebar.success(" File processed successfully!")
     
     # Route to appropriate page
-    if page == "📤 Upload & Process":
+    if page == " Upload & Process":
         show_upload_page()
-    elif page == "👨‍🎓 Student Analytics":
+    elif page == " Student Analytics":
         show_student_analytics_page()
-    elif page == "👨‍🏫 Faculty Dashboard":
+    elif page == " Faculty Dashboard":
         show_faculty_dashboard()
-    elif page == "📊 Class Overview":
+    elif page == " Class Overview":
         show_class_overview_page()
-    elif page == "📧 Email Reports":
+    elif page == " Email Reports":
         show_email_reports_page()
-    elif page == "👑 Admin Panel":
+    elif page == " Admin Panel":
         show_admin_panel_page()
 
 def show_upload_page():
     """Upload and process page"""
-    st.markdown("## 📤 Upload & Process Excel File")
+    st.markdown("##  Upload & Process Excel File")
     
     st.markdown("""
     <div class="card">
@@ -776,13 +773,13 @@ def show_upload_page():
     """, unsafe_allow_html=True)
     
     if 'parsed_data' not in st.session_state or not st.session_state.parsed_data:
-        st.info("👈 Please upload an Excel file using the sidebar")
+        st.info(" Please upload an Excel file using the sidebar")
         return
     
     data = st.session_state.parsed_data
     
     # Display course information
-    st.markdown("### 📋 Course Information")
+    st.markdown("###  Course Information")
     course_info = data.get('course_info', {})
     
     col1, col2, col3, col4 = st.columns(4)
@@ -796,7 +793,7 @@ def show_upload_page():
         st.metric("Teacher", course_info.get('teacher', 'N/A'))
     
     # Tabs for different views
-    tab1, tab2, tab3, tab4 = st.tabs(["👨‍🎓 Students", "📊 CO Attainment", "📈 PO Attainment", "📋 Raw Data"])
+    tab1, tab2, tab3, tab4 = st.tabs([" Students", " CO Attainment", " PO Attainment", " Raw Data"])
     
     with tab1:
         st.markdown("### Student List")
@@ -898,10 +895,10 @@ def show_upload_page():
 
 def show_student_analytics_page():
     """Student analytics page with individual CO-PO viewing"""
-    st.markdown("## 👨‍🎓 Student Analytics")
+    st.markdown("##  Student Analytics")
     
     if 'parsed_data' not in st.session_state or not st.session_state.parsed_data:
-        st.info("👈 Please upload an Excel file using the sidebar")
+        st.info(" Please upload an Excel file using the sidebar")
         return
     
     data = st.session_state.parsed_data
@@ -1033,10 +1030,10 @@ def show_student_analytics_page():
 
 def show_faculty_dashboard():
     """Faculty dashboard with quick overview"""
-    st.markdown("## 👨‍🏫 Faculty Dashboard")
+    st.markdown("##  Faculty Dashboard")
     
     if 'parsed_data' not in st.session_state or not st.session_state.parsed_data:
-        st.info("👈 Please upload an Excel file using the sidebar")
+        st.info(" Please upload an Excel file using the sidebar")
         return
     
     data = st.session_state.parsed_data
@@ -1084,7 +1081,7 @@ def show_faculty_dashboard():
 
 def show_class_overview_page():
     """Full class overview with all CO-PO data"""
-    st.markdown("## 📊 Class Overview")
+    st.markdown("##  Class Overview")
     
     if 'parsed_data' not in st.session_state or not st.session_state.parsed_data:
         st.info("👈 Please upload an Excel file using the sidebar")
@@ -1118,7 +1115,7 @@ def show_class_overview_page():
         # Download button
         csv = df.to_csv(index=False)
         st.download_button(
-            "📥 Download Student Data (CSV)",
+            " Download Student Data (CSV)",
             csv,
             "student_data.csv",
             "text/csv"
@@ -1210,7 +1207,7 @@ def show_email_reports_page():
     )
     
     # Send emails button
-    if st.button("📤 Send Reports to All Parents", type="primary"):
+    if st.button(" Send Reports to All Parents", type="primary"):
         if not smtp_email or not smtp_password:
             st.error("Please enter SMTP credentials")
         else:
@@ -1248,9 +1245,9 @@ def show_email_reports_page():
                 progress_bar.progress((idx + 1) / len(edited_df))
             
             if sent_count > 0:
-                st.success(f"✅ Successfully sent {sent_count} emails")
+                st.success(f" Successfully sent {sent_count} emails")
             if failed_count > 0:
-                st.error(f"❌ Failed to send {failed_count} emails")
+                st.error(f" Failed to send {failed_count} emails")
 
 def generate_email_body(student, data):
     """Generate HTML email body for student report"""
@@ -1302,7 +1299,7 @@ def generate_email_body(student, data):
 
 def show_admin_panel_page():
     """Admin panel for system management"""
-    st.markdown("## 👑 Admin Panel")
+    st.markdown("## Admin Panel")
     
     if 'admin_logged_in' not in st.session_state:
         st.session_state.admin_logged_in = False
@@ -1323,7 +1320,7 @@ def show_admin_panel_page():
                 else:
                     st.error("Invalid credentials")
     else:
-        st.success("✅ Logged in as Administrator")
+        st.success(" Logged in as Administrator")
         
         tab1, tab2, tab3 = st.tabs(["📊 System Overview", "👥 User Management", "⚙️ Settings"])
         
@@ -1383,12 +1380,11 @@ def show_admin_panel_page():
             st.number_input("Passing Percentage (%)", value=50, min_value=0, max_value=100)
             st.number_input("CO Total Marks", value=20, min_value=1, max_value=100)
             
-            if st.button("💾 Save Settings", type="primary"):
+            if st.button("Save Settings", type="primary"):
                 st.success("Settings saved successfully!")
 
-# ==============================================================================
+
 # MAIN APPLICATION
-# ==============================================================================
 
 if __name__ == "__main__":
     create_streamlit_app()
