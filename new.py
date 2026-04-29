@@ -16,46 +16,97 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from io import BytesIO
 
-# Third-party imports
-import streamlit as st
-import pandas as pd
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import seaborn as sns
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
-import pytz
-from openpyxl import load_workbook
-from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
-from openpyxl.utils import get_column_letter
+# Suppress warnings first
+warnings.filterwarnings('ignore')
 
-# Machine Learning imports
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestClassifier
+# Try importing third-party packages with error handling
+try:
+    import streamlit as st
+except ImportError:
+    print("Please install streamlit: pip install streamlit")
+    exit(1)
 
-# ReportLab imports
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, landscape
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.platypus import (SimpleDocTemplate, Table, TableStyle, 
-                                 Paragraph, Spacer, Image, PageBreak)
+try:
+    import pandas as pd
+except ImportError:
+    st.error("Please install pandas: pip install pandas")
+    st.stop()
 
-# Jinja2 import
-from jinja2 import Template
+try:
+    import numpy as np
+except ImportError:
+    st.error("Please install numpy: pip install numpy")
+    st.stop()
 
-# Optional dependency
+try:
+    import matplotlib
+    matplotlib.use('Agg')  # Use non-interactive backend
+    import matplotlib.pyplot as plt
+except ImportError:
+    st.error("Please install matplotlib: pip install matplotlib")
+    st.stop()
+
+try:
+    import plotly.graph_objects as go
+    import plotly.express as px
+    from plotly.subplots import make_subplots
+except ImportError:
+    st.error("Please install plotly: pip install plotly")
+    st.stop()
+
+try:
+    import seaborn as sns
+except ImportError:
+    st.error("Please install seaborn: pip install seaborn")
+    st.stop()
+
+try:
+    from sklearn.linear_model import LinearRegression
+    from sklearn.ensemble import RandomForestClassifier
+except ImportError:
+    st.error("Please install scikit-learn: pip install scikit-learn")
+    st.stop()
+
+try:
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter, landscape
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.platypus import (SimpleDocTemplate, Table, TableStyle, 
+                                     Paragraph, Spacer, Image, PageBreak)
+except ImportError:
+    st.error("Please install reportlab: pip install reportlab")
+    st.stop()
+
+try:
+    from openpyxl import load_workbook
+except ImportError:
+    st.error("Please install openpyxl: pip install openpyxl")
+    st.stop()
+
+try:
+    import pytz
+except ImportError:
+    st.error("Please install pytz: pip install pytz")
+    st.stop()
+
+try:
+    from jinja2 import Template
+except ImportError:
+    st.error("Please install jinja2: pip install jinja2")
+    st.stop()
+
+# Optional xlsxwriter
 try:
     import xlsxwriter
 except ImportError:
     xlsxwriter = None
+
+# Email imports (built-in)
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 
 # Suppress warnings
 warnings.filterwarnings('ignore')
