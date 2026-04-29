@@ -1,46 +1,12 @@
-# EduTrack Pro Requirements
-
-# Web Framework
-streamlit>=1.28.0
-
-# Data Processing
-pandas>=1.5.0
-numpy>=1.23.0
-openpyxl>=3.0.0
-
-# Visualization
-matplotlib>=3.6.0
-seaborn>=0.12.0
-plotly>=5.14.0
-
-# Machine Learning
-scikit-learn>=1.2.0
-
-# PDF Generation
-reportlab>=4.0.0
-
-# Email
-# smtplib and email are built-in Python modules
-
-# File Handling
-# hashlib, json, os, io, pickle are built-in Python modules
-# pathlib is built-in Python module
-
-# Time and Date
-# datetime, time are built-in Python modules
-pytz>=2023.3
-
-# Excel Writing
-xlsxwriter>=3.0.0
-
-# Security
-# secrets, string are built-in Python modules
-
-# Template Engine
-Jinja2>=3.1.0
-
-# Threading for background tasks
-# threading is built-in Python module
-
-# Warning Filter
-# warnings is built-in Python module
+streamlit
+pandas
+numpy
+openpyxl
+matplotlib
+seaborn
+plotly
+scikit-learn
+reportlab
+pytz
+xlsxwriter
+jinja2
