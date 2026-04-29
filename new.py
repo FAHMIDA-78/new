@@ -1,48 +1,64 @@
+# Standard library imports
 import io
-from reportlab.platypus import Image as ReportLabImage
-import streamlit as st
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import seaborn as sns
 import hashlib
 import json
 import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from datetime import datetime, timedelta
-from io import BytesIO
-import warnings
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestClassifier
 import pickle
-from pathlib import Path
-import base64
 import random
 import time
 import threading
 import secrets
 import string
-from jinja2 import Template
+import re
+import tempfile
+import warnings
+from pathlib import Path
+from datetime import datetime, timedelta
+from io import BytesIO
+
+# Third-party imports
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+import seaborn as sns
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+import pytz
+from openpyxl import load_workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
+
+# Machine Learning imports
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestClassifier
+
+# ReportLab imports
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.pdfgen import canvas
-import tempfile
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet
-import pytz
-import re
-from openpyxl import load_workbook
-warnings.filterwarnings('ignore')
+from reportlab.platypus import (SimpleDocTemplate, Table, TableStyle, 
+                                 Paragraph, Spacer, Image, PageBreak)
 
+# Jinja2 import
+from jinja2 import Template
+
+# Optional dependency
+try:
+    import xlsxwriter
+except ImportError:
+    xlsxwriter = None
+
+# Suppress warnings
+warnings.filterwarnings('ignore')
 # ==============================================================================
 # EMAIL CONFIGURATION
 # ==============================================================================
