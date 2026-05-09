@@ -8,11 +8,7 @@ import hashlib
 import json
 import os
 import re
-import smtplib
 import time
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -22,15 +18,9 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import (
-    SimpleDocTemplate, 
-    Table, 
-    TableStyle, 
-    Paragraph, 
-    Spacer, 
-    Image
-)
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 import warnings
+import pickle
 
 warnings.filterwarnings('ignore')
 
