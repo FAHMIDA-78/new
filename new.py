@@ -1,1824 +1,2240 @@
-# Standard library imports
-import io
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import plotly.express as px
 import hashlib
 import json
 import os
-import pickle
-import random
-import time
-import threading
-import secrets
-import string
 import re
-import tempfile
-import warnings
-from pathlib import Path
-from datetime import datetime, timedelta
-from io import BytesIO
-
-# Suppress warnings first
-warnings.filterwarnings('ignore')
-
-# Try importing third-party packages with error handling
-try:
-    import streamlit as st
-except ImportError:
-    print("Please install streamlit: pip install streamlit")
-    exit(1)
-
-try:
-    import pandas as pd
-except ImportError:
-    st.error("Please install pandas: pip install pandas")
-    st.stop()
-
-try:
-    import numpy as np
-except ImportError:
-    st.error("Please install numpy: pip install numpy")
-    st.stop()
-
-try:
-    import matplotlib
-    matplotlib.use('Agg')  # Use non-interactive backend
-    import matplotlib.pyplot as plt
-except ImportError:
-    st.error("Please install matplotlib: pip install matplotlib")
-    st.stop()
-
-try:
-    import plotly.graph_objects as go
-    import plotly.express as px
-    from plotly.subplots import make_subplots
-except ImportError:
-    st.error("Please install plotly: pip install plotly")
-    st.stop()
-
-try:
-    import seaborn as sns
-except ImportError:
-    st.error("Please install seaborn: pip install seaborn")
-    st.stop()
-
-try:
-    from sklearn.linear_model import LinearRegression
-    from sklearn.ensemble import RandomForestClassifier
-except ImportError:
-    st.error("Please install scikit-learn: pip install scikit-learn")
-    st.stop()
-
-try:
-    from reportlab.lib import colors
-    from reportlab.lib.pagesizes import letter, landscape
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    from reportlab.platypus import (SimpleDocTemplate, Table, TableStyle, 
-                                     Paragraph, Spacer, Image, PageBreak)
-except ImportError:
-    st.error("Please install reportlab: pip install reportlab")
-    st.stop()
-
-try:
-    from openpyxl import load_workbook
-except ImportError:
-    st.error("Please install openpyxl: pip install openpyxl")
-    st.stop()
-
-try:
-    import pytz
-except ImportError:
-    st.error("Please install pytz: pip install pytz")
-    st.stop()
-
-try:
-    from jinja2 import Template
-except ImportError:
-    st.error("Please install jinja2: pip install jinja2")
-    st.stop()
-
-# Optional xlsxwriter
-try:
-    import xlsxwriter
-except ImportError:
-    xlsxwriter = None
-
-# Email imports (built-in)
 import smtplib
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from datetime import datetime
+from io import BytesIO
+from pathlib import Path
+import pytz
+from openpyxl import load_workbook
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import (
+    SimpleDocTemplate, 
+    Table, 
+    TableStyle, 
+    Paragraph, 
+    Spacer, 
+    Image
+)
+import warnings
 
-# Suppress warnings
 warnings.filterwarnings('ignore')
-# ==============================================================================
-# EMAIL CONFIGURATION
-# ==============================================================================
-SMTP_CONFIG = {
-    'server': 'smtp.gmail.com',
-    'port': 587,
-    'email': 'fahmidafaiza918@gmail.com',
-    'password': 'karzuqmdxkbnauuw'
-}
 
-# ==============================================================================
-# CHECK AND INSTALL MISSING DEPENDENCIES
-# ==============================================================================
-try:
-    import xlsxwriter
-except ImportError:
-    st.error("Missing dependency: xlsxwriter")
-    st.info("Please install it using: pip install xlsxwriter")
-    if st.button("Install xlsxwriter (requires internet)"):
-        import subprocess
-        import sys
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "xlsxwriter"])
-        st.success("xlsxwriter installed successfully! Please restart the app.")
-        st.stop()
-
-try:
-    from reportlab.lib import colors
-except ImportError:
-    st.error("Missing dependency: reportlab")
-    st.info("Please install it using: pip install reportlab")
-    if st.button("Install reportlab (requires internet)"):
-        import subprocess
-        import sys
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "reportlab"])
-        st.success("reportlab installed successfully! Please restart the app.")
-        st.stop()
-
-# ==============================================================================
-# APPLICATION CONFIGURATION
-# ==============================================================================
+# CONFIGURATION
 st.set_page_config(
-    page_title="EduTrack Pro 2025",
+    page_title="EduTrack Pro 2026",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ==============================================================================
-# PROFESSIONAL THEME (Kept from original)
-# ==============================================================================
-def apply_professional_theme():
-    # [Theme code remains the same as original]
-    pass
+SMTP_CONFIG = {
+    'server': 'smtp.gmail.com',
+    'port': 587,
+    'email': 'your_email@gmail.com',
+    'password': 'your_app_password'
+}
 
-# ==============================================================================
-# PARSE EXCEL FILE DYNAMICALLY
-# ==============================================================================
-def parse_excel_file(uploaded_file):
-    """Dynamically parse Excel file with any structure"""
+
+# THEME
+def apply_professional_theme():
+    st.markdown("""
+    <style>
+    .stApp > footer,
+    .stApp footer,
+    footer,
+    div[data-testid="stApp"] footer {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+    }
+    
+    #MainMenu,
+    header[data-testid="stHeader"],
+    div[data-testid="stToolbar"],
+    div[data-testid="stDecoration"] {
+        display: none !important;
+    }
+    
+    .stApp button[title="Manage app"],
+    button:has(span:contains("Manage")),
+    a:has(span:contains("Manage")) {
+        display: none !important;
+    }
+    
+    div[data-testid="stBottom"],
+    div[data-testid="stBottomBlock"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    
+    .main {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Segoe UI', 'Inter', 'Roboto', sans-serif;
+    }
+    
+    @keyframes gradientAnimation {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .header {
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: gradientAnimation 15s ease infinite;
+        color: white;
+        padding: 1.8rem;
+        border-radius: 0 0 25px 25px;
+        margin-bottom: 2rem;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    }
+    
+    .card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 1.8rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        transition: all 0.4s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(31, 38, 135, 0.25);
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0.5rem 0;
+    }
+    
+    .metric-label {
+        font-size: 0.9rem;
+        color: rgba(255,255,255,0.9);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .stButton > button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+# SESSION STATE INITIALIZATION
+if 'logged_in' not in st.session_state: st.session_state.logged_in = False
+if 'user_type' not in st.session_state: st.session_state.user_type = ""
+if 'username' not in st.session_state: st.session_state.username = ""
+if 'user_data' not in st.session_state: st.session_state.user_data = {}
+if 'current_page' not in st.session_state: st.session_state.current_page = "login"
+if 'results' not in st.session_state: st.session_state.results = {}
+if 'processed' not in st.session_state: st.session_state.processed = False
+if 'activity_log' not in st.session_state: st.session_state.activity_log = []
+if 'teacher_uploads' not in st.session_state: st.session_state.teacher_uploads = {}
+if 'show_email_modal' not in st.session_state: st.session_state.show_email_modal = None
+if 'show_reset_confirm' not in st.session_state: st.session_state.show_reset_confirm = None
+if 'show_change_password' not in st.session_state: st.session_state.show_change_password = False
+
+
+# UTILITY FUNCTIONS
+def get_current_semester():
+    bd_tz = pytz.timezone('Asia/Dhaka')
+    now = datetime.now(bd_tz)
+    if 1 <= now.month <= 6:
+        return f"Spring {now.year}"
+    else:
+        return f"Summer {now.year}"
+
+def hash_password(password):
+    salt = "EduTrack2026!"
+    return hashlib.sha256((password + salt).encode()).hexdigest()
+
+def verify_password(password, hashed):
+    return hash_password(password) == hashed
+
+def calculate_sgpa(total_marks):
+    if total_marks >= 80: return 4.00
+    elif total_marks >= 75: return 3.75
+    elif total_marks >= 70: return 3.50
+    elif total_marks >= 65: return 3.25
+    elif total_marks >= 60: return 3.00
+    elif total_marks >= 55: return 2.75
+    elif total_marks >= 50: return 2.50
+    elif total_marks >= 45: return 2.25
+    elif total_marks >= 40: return 2.00
+    else: return 0.00
+
+def get_grade_from_marks(total_marks):
+    if total_marks >= 80: return "A+"
+    elif total_marks >= 75: return "A"
+    elif total_marks >= 70: return "A-"
+    elif total_marks >= 65: return "B+"
+    elif total_marks >= 60: return "B"
+    elif total_marks >= 55: return "B-"
+    elif total_marks >= 50: return "C+"
+    elif total_marks >= 45: return "C"
+    elif total_marks >= 40: return "D"
+    else: return "F"
+
+def log_activity(username, action, details=""):
+    st.session_state.activity_log.append({
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "username": username,
+        "action": action,
+        "details": details
+    })
+
+def save_course_data(semester, course_code, results):
+    try:
+        data_dir = Path("course_data")
+        data_dir.mkdir(exist_ok=True)
+        course_file = data_dir / f"course_{semester.replace(' ', '_')}_{course_code.replace(' ', '_')}.pkl"
+        with open(course_file, 'wb') as f:
+            pickle.dump(results, f)
+        return True
+    except Exception as e:
+        st.error(f"Error saving: {e}")
+        return False
+
+def load_all_courses():
+    courses = {}
+    try:
+        data_dir = Path("course_data")
+        if data_dir.exists():
+            for file in data_dir.glob("course_*.pkl"):
+                try:
+                    with open(file, 'rb') as f:
+                        course_data = pickle.load(f)
+                        key = f"{course_data.get('semester', '')} - {course_data.get('course_code', '')}"
+                        courses[key] = course_data
+                except:
+                    continue
+    except:
+        pass
+    return courses
+
+def load_student_data(student_id):
+    try:
+        student_file = Path("course_data") / f"student_{student_id.replace(' ', '_')}.pkl"
+        if student_file.exists():
+            with open(student_file, 'rb') as f:
+                return pickle.load(f)
+        return {}
+    except:
+        return {}
+
+def track_teacher_upload(username, semester, course_code, filename, student_count):
+    if username not in st.session_state.teacher_uploads:
+        st.session_state.teacher_uploads[username] = []
+    st.session_state.teacher_uploads[username].append({
+        'semester': semester,
+        'course_code': course_code,
+        'filename': filename,
+        'student_count': student_count,
+        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+
+def load_users():
+    default_users = {
+        "admins": {
+            "admin": {
+                "username": "admin",
+                "password": hash_password("admin123"),
+                "email": "admin@stamford.edu.bd",
+                "full_name": "System Administrator",
+                "department": "IT & Administration",
+                "designation": "System Admin",
+                "user_type": "admin",
+                "created_at": "2024-01-01",
+                "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "is_active": True,
+                "admin_level": "super"
+            }
+        },
+        "teachers": {
+            "teacher": {
+                "username": "teacher",
+                "password": hash_password("teacher123"),
+                "email": "teacher@stamford.edu.bd",
+                "full_name": "Teacher",
+                "department": "Electrical & Electronic Engineering",
+                "designation": "lecturer",
+                "user_type": "teacher",
+                "created_at": "2024-01-01",
+                "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "is_active": True,
+                "courses_assigned": ["Power System Protection", "Circuit Theory", "Power Electronics"]
+            }
+        },
+        "students": {},
+        "parents": {}
+    }
+    
+    try:
+        if os.path.exists("users_enhanced.json"):
+            with open("users_enhanced.json", 'r') as f:
+                loaded_users = json.load(f)
+            
+            for user_type in default_users:
+                if user_type not in loaded_users:
+                    loaded_users[user_type] = {}
+                for username, user_data in default_users[user_type].items():
+                    if username not in loaded_users[user_type]:
+                        loaded_users[user_type][username] = user_data
+                    else:
+                        if username in ['admin', 'teacher']:
+                            loaded_users[user_type][username]['password'] = hash_password('admin123' if username == 'admin' else 'teacher123')
+                            loaded_users[user_type][username]['is_active'] = True
+            
+            return loaded_users
+    except Exception as e:
+        st.error(f"Error loading users: {e}")
+    
+    return default_users
+
+def save_users(users):
+    try:
+        with open("users_enhanced.json", 'w') as f:
+            json.dump(users, f, indent=4, default=str)
+        return True
+    except:
+        return False
+
+def authenticate_user(username, password, user_type):
+    users = load_users()
+    user_category = user_type + "s"
+    if user_category in users and username in users[user_category]:
+        user_data = users[user_category][username]
+        if verify_password(password, user_data["password"]):
+            if not user_data.get("is_active", True):
+                return False, "Account deactivated"
+            return True, user_data
+    return False, "Invalid credentials"
+
+def change_password(username, user_type, old_password, new_password):
+    """Change password for a user"""
+    users = load_users()
+    user_category = user_type + "s"
+    
+    if user_category in users and username in users[user_category]:
+        user_data = users[user_category][username]
+        
+        # Verify old password
+        if not verify_password(old_password, user_data["password"]):
+            return False, "Current password is incorrect"
+        
+        # Update password
+        users[user_category][username]["password"] = hash_password(new_password)
+        users[user_category][username]["password_changed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        if save_users(users):
+            log_activity(username, "password_changed", f"Password changed for {username}")
+            return True, "Password changed successfully!"
+        
+    return False, "User not found"
+
+def send_email(to_email, subject, body, pdf_buffer=None):
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = SMTP_CONFIG['email']
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'html'))
+        if pdf_buffer:
+            pdf_attachment = MIMEApplication(pdf_buffer.getvalue(), _subtype='pdf')
+            pdf_attachment.add_header('Content-Disposition', 'attachment', filename='Student_Report.pdf')
+            msg.attach(pdf_attachment)
+        with smtplib.SMTP(SMTP_CONFIG['server'], SMTP_CONFIG['port']) as server:
+            server.starttls()
+            server.login(SMTP_CONFIG['email'], SMTP_CONFIG['password'])
+            server.send_message(msg)
+        return True, "Email sent"
+    except Exception as e:
+        return False, str(e)
+
+
+# SPIDER PLOT FUNCTION
+def create_spider_plot(values, labels, title="PO Attainment Spider Plot"):
+    num_vars = len(labels)
+    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+    values = np.concatenate((values, [values[0]]))
+    angles += angles[:1]
+    
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(projection='polar'))
+    ax.fill(angles, values, color='#667eea', alpha=0.25)
+    ax.plot(angles, values, color='#667eea', linewidth=2, marker='o', markersize=8)
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(labels, fontsize=10)
+    ax.set_ylim(0, 100)
+    ax.set_yticks([20, 40, 60, 80, 100])
+    ax.set_yticklabels(['20%', '40%', '60%', '80%', '100%'], fontsize=8, color='gray')
+    ax.grid(True, alpha=0.3)
+    ax.set_title(title, size=16, fontweight='bold', pad=20)
+    
+    for i, (angle, value) in enumerate(zip(angles[:-1], values[:-1])):
+        ax.annotate(f'{value:.1f}%', xy=(angle, value), xytext=(5, 5),
+                   textcoords='offset points', fontsize=9, fontweight='bold', color='#333')
+    
+    plt.tight_layout()
+    return fig
+
+
+# ENHANCED EXCEL PARSER WITH DYNAMIC PO DETECTION
+def parse_excel_eee_format(uploaded_file):
+    """Enhanced parser with dynamic PO column detection - supports any number of POs"""
     try:
         wb = load_workbook(uploaded_file, data_only=True)
         sheet_names = wb.sheetnames
         
-        # Find sheets with student data (look for SL, Student ID columns)
-        student_data_sheets = []
+        st.info(f"📊 Found {len(sheet_names)} sheets: {', '.join(sheet_names)}")
         
-        for sheet_name in sheet_names:
-            ws = wb[sheet_name]
+        student_id_pattern = re.compile(r'EEE\s*\d{3}\s*\d{5}', re.IGNORECASE)
+        co_header_pattern = re.compile(r'^CO(\d+)$', re.IGNORECASE)
+        po_header_pattern = re.compile(r'^PO\(([a-zA-Z])\)$', re.IGNORECASE)  # Dynamic PO detection
+        
+        parsed_data = {
+            'course_info': {
+                'university': 'Stamford University Bangladesh',
+                'trimester': '',
+                'section': '',
+                'course_code': '',
+                'course_title': '',
+                'teacher': ''
+            },
+            'students': {},
+            'co_columns': [],
+            'po_columns': [],
+            'co_po_mapping': {},
+            'max_co_marks': {},
+            'max_po_marks': {},
+        }
+        
+        # Parse Course Info from Midterm Exam sheet
+        if 'Midterm Exam' in sheet_names:
+            mid_sheet = wb['Midterm Exam']
+            for row in mid_sheet.iter_rows(min_row=1, max_row=8, max_col=4, values_only=True):
+                for cell_val in row:
+                    if cell_val and isinstance(cell_val, str):
+                        cell_str = str(cell_val).strip()
+                        if 'Trimester' in cell_str:
+                            parsed_data['course_info']['trimester'] = cell_str.split(':')[-1].strip()
+                        elif 'Section' in cell_str and 'Course' not in cell_str:
+                            parsed_data['course_info']['section'] = cell_str.split(':')[-1].strip()
+                        elif 'Course Code' in cell_str:
+                            parsed_data['course_info']['course_code'] = cell_str.split(':')[-1].strip()
+                        elif 'Course Title' in cell_str:
+                            parsed_data['course_info']['course_title'] = cell_str.split(':')[-1].strip()
+                        elif 'Course Teacher' in cell_str or 'Teacher' in cell_str:
+                            parsed_data['course_info']['teacher'] = cell_str.split(':')[-1].strip().replace(':', '').strip()
+        
+        # Parse Analysis of CO sheet for student data
+        if 'Analysis of CO' in sheet_names:
+            co_sheet = wb['Analysis of CO']
             
-            # Check if this sheet has student data
-            has_student_data = False
-            for row in ws.iter_rows(min_row=1, max_row=min(30, ws.max_row), values_only=False):
-                for cell in row:
-                    if cell.value and isinstance(cell.value, str):
-                        if 'student' in cell.value.lower() or 'name' in cell.value.lower():
-                            has_student_data = True
-                            break
-                if has_student_data:
+            # Find the header row (row with "SL" in column A)
+            sl_header_row = None
+            for row_idx in range(1, min(30, co_sheet.max_row + 1)):
+                cell_val = str(co_sheet.cell(row=row_idx, column=1).value or '').strip()
+                if cell_val.upper() == 'SL':
+                    sl_header_row = row_idx
                     break
             
-            if has_student_data:
-                student_data_sheets.append(sheet_name)
-        
-        if not student_data_sheets:
-            # Try to read all sheets and find any with student-like data
-            for sheet_name in sheet_names:
-                df = pd.read_excel(uploaded_file, sheet_name=sheet_name, header=None)
-                for col in df.columns:
-                    if df[col].astype(str).str.contains('EEE|Student|Name|ID', case=False).any():
-                        student_data_sheets.append(sheet_name)
-                        break
-        
-        # Parse each sheet that might contain student data
-        all_student_data = {}
-        co_po_info = {}
-        
-        for sheet_name in sheet_names:
-            df = pd.read_excel(uploaded_file, sheet_name=sheet_name, header=None)
-            
-            # Extract metadata (Trimester, Course Code, etc.)
-            metadata = {}
-            for idx, row in df.iterrows():
-                if idx > 10:  # Only check first 10 rows for metadata
-                    break
-                for col_idx, value in enumerate(row):
-                    if pd.notna(value) and isinstance(value, str):
-                        value_str = str(value).strip().lower()
-                        if 'trimester' in value_str or 'semester' in value_str:
-                            next_val = row[col_idx + 1] if col_idx + 1 < len(row) else None
-                            metadata['semester'] = str(next_val).strip() if pd.notna(next_val) else ''
-                        elif 'course code' in value_str:
-                            next_val = row[col_idx + 1] if col_idx + 1 < len(row) else None
-                            metadata['course_code'] = str(next_val).strip() if pd.notna(next_val) else ''
-                        elif 'course title' in value_str:
-                            next_val = row[col_idx + 1] if col_idx + 1 < len(row) else None
-                            metadata['course_title'] = str(next_val).strip() if pd.notna(next_val) else ''
-                        elif 'teacher' in value_str:
-                            next_val = row[col_idx + 1] if col_idx + 1 < len(row) else None
-                            metadata['teacher'] = str(next_val).strip() if pd.notna(next_val) else ''
-            
-            # Find the header row (look for SL, Student ID, Name patterns)
-            header_row = None
-            for idx, row in df.iterrows():
-                row_str = ' '.join([str(v) for v in row if pd.notna(v)])
-                if any(pattern in row_str.lower() for pattern in ['student id', 'sl', 'name']):
-                    header_row = idx
-                    break
-            
-            if header_row is not None:
-                # Read data from header row onwards
-                df_data = pd.read_excel(uploaded_file, sheet_name=sheet_name, header=header_row)
+            if sl_header_row:
+                # Find CO columns dynamically
+                co_columns_found = []
+                for col_idx in range(5, 20):  # Scan columns E to T
+                    cell_val = str(co_sheet.cell(row=sl_header_row, column=col_idx).value or '').strip()
+                    co_match = co_header_pattern.match(cell_val)
+                    if co_match:
+                        co_name = f"CO{co_match.group(1)}"
+                        co_columns_found.append((col_idx, co_name))
                 
-                # Find CO and PO columns dynamically
-                co_columns = [col for col in df_data.columns if 'co' in str(col).lower()]
-                po_columns = [col for col in df_data.columns if 'po' in str(col).lower()]
+                parsed_data['co_columns'] = [co_name for _, co_name in co_columns_found]
                 
-                # Store CO/PO info
-                if co_columns or po_columns:
-                    co_po_info[sheet_name] = {
-                        'co_columns': co_columns,
-                        'po_columns': po_columns,
-                        'metadata': metadata
+                # Max marks row is one row below header
+                max_row = sl_header_row + 1
+                
+                # Parse max CO marks
+                for col_idx, co_name in co_columns_found:
+                    val = co_sheet.cell(row=max_row, column=col_idx).value
+                    parsed_data['max_co_marks'][co_name] = float(val) if val else 0
+                
+                # Parse individual student data (rows after max_row)
+                for row_idx in range(max_row + 1, co_sheet.max_row + 1):
+                    sl_val = co_sheet.cell(row=row_idx, column=1).value
+                    if not sl_val:
+                        continue
+                    
+                    # Student ID is in column B (index 2)
+                    student_id_cell = co_sheet.cell(row=row_idx, column=2).value
+                    if not student_id_cell:
+                        continue
+                    
+                    student_id = str(student_id_cell).strip()
+                    
+                    # Validate student ID format
+                    if not student_id_pattern.search(student_id):
+                        if not re.match(r'^\d{3}\s*\d{5}$', student_id) and not re.match(r'^EEE', student_id, re.IGNORECASE):
+                            continue
+                    
+                    student_name = str(co_sheet.cell(row=row_idx, column=3).value or '').strip()
+                    student_status = str(co_sheet.cell(row=row_idx, column=4).value or '').strip()
+                    
+                    # Read CO marks from dynamically found columns
+                    co_marks = {}
+                    co_pct = {}
+                    
+                    for col_idx, co_name in co_columns_found:
+                        val = co_sheet.cell(row=row_idx, column=col_idx).value
+                        co_marks[co_name] = float(val) if val is not None else 0.0
+                        
+                        # CO attainment percentages are usually 2 columns after marks
+                        pct_col = col_idx + 2
+                        pct_val = co_sheet.cell(row=row_idx, column=pct_col).value
+                        co_pct[co_name] = float(pct_val) if pct_val is not None else 0.0
+                    
+                    total_marks = sum(co_marks.values())
+                    
+                    parsed_data['students'][student_id] = {
+                        'id': student_id,
+                        'name': student_name,
+                        'status': student_status,
+                        'co_marks': co_marks,
+                        'total_marks': total_marks,
+                        'co_attainment_pct': co_pct,
+                        'po_marks': {},
+                        'po_attainment_pct': {},
+                        'sgpa': calculate_sgpa(total_marks),
+                        'grade': get_grade_from_marks(total_marks),
+                        'status_final': 'Pass' if total_marks >= 40 else 'Fail',
                     }
-                
-                all_student_data[sheet_name] = {
-                    'data': df_data,
-                    'metadata': metadata,
-                    'co_columns': co_columns,
-                    'po_columns': po_columns
-                }
         
-        return all_student_data, co_po_info, sheet_names
-    
+        # Parse Analysis of PO sheet with DYNAMIC PO detection
+        if 'Analysis of PO' in sheet_names:
+            po_sheet = wb['Analysis of PO']
+            
+            # Find CO-PO matrix header
+            co_po_start = None
+            for row_idx in range(1, min(25, po_sheet.max_row + 1)):
+                cell_val = str(po_sheet.cell(row=row_idx, column=3).value or '').strip()
+                if 'CO-PO matrix' in cell_val or 'CO-PO' in cell_val:
+                    co_po_start = row_idx
+                    break
+            
+            if not co_po_start:
+                co_po_start = 10
+            
+            # DYNAMICALLY detect PO columns from the CO-PO matrix row
+            po_columns = {}
+            for col_idx in range(4, 30):  # Scan columns D to AD (wide range)
+                cell_val = str(po_sheet.cell(row=co_po_start, column=col_idx).value or '').strip()
+                po_match = po_header_pattern.match(cell_val)
+                if po_match:
+                    po_name = f"PO({po_match.group(1).lower()})"
+                    po_columns[col_idx] = po_name
+            
+            parsed_data['po_columns'] = sorted(po_columns.values())
+            st.info(f"📊 Dynamically detected {len(parsed_data['po_columns'])} POs: {', '.join(parsed_data['po_columns'])}")
+            
+            # Parse CO-PO mapping weights
+            co_po_mapping = {}
+            for row_offset in range(1, len(parsed_data['co_columns']) + 1):
+                row_idx = co_po_start + row_offset
+                co_cell = str(po_sheet.cell(row=row_idx, column=3).value or '').strip()
+                co_match = co_header_pattern.match(co_cell)
+                if co_match:
+                    co_name = f"CO{co_match.group(1)}"
+                    mapping = {}
+                    for col_idx, po_name in po_columns.items():
+                        val = po_sheet.cell(row=row_idx, column=col_idx).value
+                        if val and float(val) > 0:
+                            mapping[po_name] = float(val)
+                    if mapping:
+                        co_po_mapping[co_name] = mapping
+            
+            parsed_data['co_po_mapping'] = co_po_mapping
+            
+            # Find student data section in PO sheet
+            student_header_row = None
+            for row_idx in range(25, min(50, po_sheet.max_row + 1)):
+                cell_val = str(po_sheet.cell(row=row_idx, column=1).value or '').strip()
+                if cell_val.upper() == 'SL':
+                    student_header_row = row_idx
+                    break
+            
+            if student_header_row:
+                max_po_row = student_header_row + 1
+                
+                # Parse PO max marks from the row after header
+                for col_idx, po_name in po_columns.items():
+                    val = po_sheet.cell(row=max_po_row, column=col_idx).value
+                    parsed_data['max_po_marks'][po_name] = float(val) if val else 0
+                
+                # Parse individual student PO data
+                for row_idx in range(max_po_row + 1, po_sheet.max_row + 1):
+                    sl_val = po_sheet.cell(row=row_idx, column=1).value
+                    if not sl_val:
+                        continue
+                    
+                    student_id_cell = po_sheet.cell(row=row_idx, column=2).value
+                    if not student_id_cell:
+                        continue
+                    
+                    student_id = str(student_id_cell).strip()
+                    if not student_id_pattern.search(student_id):
+                        if not re.match(r'^\d{3}\s*\d{5}$', student_id) and not re.match(r'^EEE', student_id, re.IGNORECASE):
+                            continue
+                    
+                    if student_id not in parsed_data['students']:
+                        continue
+                    
+                    # Read PO marks from dynamically detected columns
+                    po_marks = {}
+                    po_pct = {}
+                    
+                    for col_idx, po_name in po_columns.items():
+                        # PO marks
+                        mark_val = po_sheet.cell(row=row_idx, column=col_idx).value
+                        po_marks[po_name] = float(mark_val) if mark_val is not None else 0.0
+                        
+                        # PO percentages (usually 2 columns after marks, but find dynamically)
+                        # Look for percentage in nearby columns
+                        for pct_offset in [2, 3, 4]:
+                            pct_col = col_idx + pct_offset
+                            if pct_col <= po_sheet.max_column:
+                                pct_val = po_sheet.cell(row=row_idx, column=pct_col).value
+                                if pct_val and isinstance(pct_val, (int, float)) and 0 <= pct_val <= 100:
+                                    po_pct[po_name] = float(pct_val)
+                                    break
+                    
+                    parsed_data['students'][student_id]['po_marks'] = po_marks
+                    parsed_data['students'][student_id]['po_attainment_pct'] = po_pct
+        
+        wb.close()
+        
+        student_count = len(parsed_data['students'])
+        if student_count > 0:
+            st.success(f"✅ Successfully parsed {student_count} students with dynamic PO detection")
+            with st.expander("📋 Parsing Details"):
+                st.write(f"**CO columns:** {parsed_data['co_columns']}")
+                st.write(f"**PO columns (auto-detected):** {parsed_data['po_columns']}")
+                st.write(f"**CO-PO mappings:** {len(parsed_data['co_po_mapping'])}")
+                st.write(f"**Course Info:** {parsed_data['course_info']}")
+                
+                # Show sample data
+                sample_students = list(parsed_data['students'].items())[:3]
+                if sample_students:
+                    sample_data = []
+                    for sid, s in sample_students:
+                        sample_data.append({
+                            'Student': s['name'][:20],
+                            'Total Marks': f"{s['total_marks']:.1f}",
+                            'COs': len(s.get('co_marks', {})),
+                            'POs': len(s.get('po_marks', {}))
+                        })
+                    st.dataframe(pd.DataFrame(sample_data), use_container_width=True)
+        else:
+            st.warning("⚠️ No students found. Please check the Excel file format.")
+        
+        return parsed_data
+        
     except Exception as e:
-        st.error(f"Error parsing Excel file: {str(e)}")
-        return {}, {}, []
+        st.error(f"❌ Error parsing Excel: {str(e)}")
+        import traceback
+        st.code(traceback.format_exc())
+        return None
 
-def extract_co_po_attainment(excel_data, co_po_info):
-    """Extract CO and PO attainment values from parsed Excel data"""
-    attainment_data = {
-        'co_attainment': {},
-        'po_attainment': {},
-        'student_co_scores': {},
-        'student_po_scores': {}
+
+# CONVERT PARSED DATA
+def convert_parsed_to_results(parsed_data, semester, course_code, course_name, username):
+    """Convert parsed data to standard results format"""
+    results = {
+        'students': {},
+        'course_stats': {},
+        'semester': semester,
+        'course_code': course_code,
+        'course_name': course_name or parsed_data.get('course_info', {}).get('course_title', ''),
+        'teacher': username,
+        'co_columns': parsed_data.get('co_columns', []),
+        'po_columns': parsed_data.get('po_columns', []),
+        'co_po_mapping': parsed_data.get('co_po_mapping', {}),
+        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
-    for sheet_name, info in co_po_info.items():
-        df = excel_data.get(sheet_name, {}).get('data')
-        if df is None:
-            continue
+    co_po_mapping = results['co_po_mapping']
+    
+    # Calculate course-level CO attainment (average of all students)
+    co_attainment = {}
+    for co in results['co_columns']:
+        scores = [s['co_attainment_pct'].get(co, 0) for s in parsed_data['students'].values()]
+        if scores:
+            co_attainment[co] = round(np.mean(scores), 2)
+    results['co_attainment'] = co_attainment
+    
+    # Calculate course-level PO attainment using CO-PO mapping
+    po_attainment = {}
+    if co_po_mapping and co_attainment:
+        for po in results['po_columns']:
+            po_value = 0
+            for co, weights in co_po_mapping.items():
+                if po in weights:
+                    po_value += co_attainment.get(co, 0) * weights[po]
+            po_attainment[po] = round(min(100, po_value), 2)
+    results['po_attainment'] = po_attainment
+    
+    # Individual student records
+    for student_id, student in parsed_data['students'].items():
+        # Use individual CO attainment percentages as co_scores
+        co_scores = {}
+        for co, pct in student.get('co_attainment_pct', {}).items():
+            co_scores[co] = round(pct * 20 / 100, 2)  # Convert % to score out of 20
         
-        # Extract CO scores for each student
-        co_columns = info.get('co_columns', [])
-        po_columns = info.get('po_columns', [])
+        # Calculate individual PO attainment using individual CO percentages
+        individual_po = {}
+        if co_po_mapping and student.get('co_attainment_pct'):
+            for po in results['po_columns']:
+                po_value = 0
+                for co, weights in co_po_mapping.items():
+                    if po in weights:
+                        student_co_pct = student['co_attainment_pct'].get(co, 0)
+                        po_value += student_co_pct * weights[po]
+                individual_po[po] = round(min(100, po_value), 2)
         
-        for idx, row in df.iterrows():
-            student_id = None
-            student_name = None
-            
-            # Find student ID and name
-            for col in df.columns:
-                if 'student' in str(col).lower() and 'id' in str(col).lower():
-                    student_id = str(row[col]) if pd.notna(row[col]) else None
-                if 'name' in str(col).lower():
-                    student_name = str(row[col]) if pd.notna(row[col]) else None
-            
-            if student_id and student_name:
-                if student_id not in attainment_data['student_co_scores']:
-                    attainment_data['student_co_scores'][student_id] = {
-                        'name': student_name,
-                        'courses': {}
-                    }
-                
-                # Extract CO scores
-                co_scores = {}
-                for co_col in co_columns:
-                    if co_col in row.index:
-                        val = row[co_col]
-                        co_scores[str(co_col)] = float(val) if pd.notna(val) and val != '' else 0.0
-                
-                # Extract PO scores
-                po_scores = {}
-                for po_col in po_columns:
-                    if po_col in row.index:
-                        val = row[po_col]
-                        po_scores[str(po_col)] = float(val) if pd.notna(val) and val != '' else 0.0
-                
-                course_code = info.get('metadata', {}).get('course_code', sheet_name)
-                attainment_data['student_co_scores'][student_id]['courses'][course_code] = {
-                    'co_scores': co_scores,
-                    'po_scores': po_scores
-                }
-    
-    # Calculate overall CO and PO attainment
-    # Calculate averages across all courses for each student
-    for student_id, data in attainment_data['student_co_scores'].items():
-        all_co = {}
-        all_po = {}
-        course_count = len(data['courses'])
+        # Use parsed PO attainment if available
+        if student.get('po_attainment_pct'):
+            individual_po.update(student['po_attainment_pct'])
         
-        for course_code, course_data in data['courses'].items():
-            for co, score in course_data['co_scores'].items():
-                if co not in all_co:
-                    all_co[co] = []
-                all_co[co].append(score)
-            
-            for po, score in course_data['po_scores'].items():
-                if po not in all_po:
-                    all_po[po] = []
-                all_po[po].append(score)
+        results['students'][student_id] = {
+            'id': student_id,
+            'name': student.get('name', ''),
+            'mid': 0,
+            'final': 0,
+            'ct': 0,
+            'assignment': 0,
+            'attendance': 0,
+            'academic_total': student.get('total_marks', 0),
+            'total_marks': student.get('total_marks', 0),
+            'sgpa': student.get('sgpa', 0),
+            'grade': student.get('grade', 'F'),
+            'co_scores': co_scores,
+            'co_attainment_pct': student.get('co_attainment_pct', {}),
+            'po_scores': individual_po,
+            'student_email': '',
+            'parent_email': '',
+            'course_code': course_code,
+            'semester': semester,
+            'status': student.get('status_final', 'Fail'),
+            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+    
+    # Calculate course statistics
+    if results['students']:
+        marks = [s['total_marks'] for s in results['students'].values()]
+        passing = len([m for m in marks if m >= 40])
+        total = len(marks)
+        results['course_stats'] = {
+            'average_marks': round(np.mean(marks), 2),
+            'academic_average': round(np.mean(marks), 2),
+            'highest_marks': round(max(marks), 2),
+            'lowest_marks': round(min(marks), 2),
+            'average_sgpa': round(np.mean([s['sgpa'] for s in results['students'].values()]), 2),
+            'total_students': total,
+            'passing_students': passing,
+            'pass_percentage': round((passing / total * 100) if total > 0 else 0, 1),
+            'fail_percentage': round(((total - passing) / total * 100) if total > 0 else 0, 1),
+            'std_deviation': round(np.std(marks), 2) if marks else 0
+        }
+    
+    return results
+
+
+# COMPREHENSIVE PDF REPORT
+def generate_comprehensive_pdf_report(course_data, course_name):
+    """Generate comprehensive PDF report in 2 pages"""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=25, bottomMargin=20)
+    
+    styles = getSampleStyleSheet()
+    story = []
+    
+    # Custom styles
+    title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=14, alignment=1, spaceAfter=8, textColor=colors.HexColor('#1a237e'))
+    heading_style = ParagraphStyle('Heading', parent=styles['Heading2'], fontSize=11, spaceAfter=5, spaceBefore=5, textColor=colors.HexColor('#283593'))
+    normal_style = ParagraphStyle('Normal', parent=styles['Normal'], fontSize=8, spaceAfter=3)
+    
+    # PAGE 1 HEADER
+    semester = course_data.get('semester', 'N/A')
+    course_code = course_data.get('course_code', 'N/A')
+    course_name_display = course_data.get('course_name', course_name)
+    teacher = course_data.get('teacher', 'N/A')
+    
+    story.append(Paragraph("EduTrack Pro 2026 - Comprehensive Course Report", title_style))
+    story.append(Spacer(1, 5))
+    
+    # Info header
+    header_data = [
+        [Paragraph(f"<b>Course:</b> {course_code} - {course_name_display}", normal_style),
+         Paragraph(f"<b>Semester:</b> {semester}", normal_style)],
+        [Paragraph(f"<b>Teacher:</b> {teacher}", normal_style),
+         Paragraph(f"<b>Generated:</b> {datetime.now().strftime('%Y-%m-%d %H:%M')}", normal_style)]
+    ]
+    header_table = Table(header_data, colWidths=[280, 250])
+    header_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#e8eaf6')),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#c5cae9')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    story.append(header_table)
+    story.append(Spacer(1, 8))
+    
+    # COURSE STATISTICS
+    story.append(Paragraph("Course Statistics", heading_style))
+    
+    stats = course_data.get('course_stats', {})
+    stats_data = [
+        ['Total Students', str(stats.get('total_students', 0)),
+         'Average Marks', f"{stats.get('average_marks', 0):.1f}"],
+        ['Highest Marks', f"{stats.get('highest_marks', 0):.1f}",
+         'Lowest Marks', f"{stats.get('lowest_marks', 0):.1f}"],
+        ['Pass Rate', f"{stats.get('pass_percentage', 0):.1f}%",
+         'Avg SGPA', f"{stats.get('average_sgpa', 0):.2f}"],
+        ['Std Deviation', f"{stats.get('std_deviation', 0):.2f}",
+         'Grade Range', f"A+ to F"],
+    ]
+    
+    stats_table = Table(stats_data, colWidths=[100, 130, 100, 130])
+    stats_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#1a237e')),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.whitesmoke),
+        ('BACKGROUND', (2, 0), (2, -1), colors.HexColor('#1a237e')),
+        ('TEXTCOLOR', (2, 0), (2, -1), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('GRID', (0, 0), (-1, -1), 0.3, colors.HexColor('#bdbdbd')),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+    ]))
+    story.append(stats_table)
+    story.append(Spacer(1, 8))
+    
+    # MARKS & GRADE DISTRIBUTION
+    students = course_data.get('students', {})
+    if students:
+        story.append(Paragraph("Performance Analytics", heading_style))
         
-        # Calculate averages
-        avg_co = {co: np.mean(scores) for co, scores in all_co.items() if scores}
-        avg_po = {po: np.mean(scores) for po, scores in all_po.items() if scores}
+        marks = [s.get('total_marks', 0) for s in students.values()]
+        grades = [s.get('grade', 'F') for s in students.values()]
         
-        attainment_data['co_attainment'] = avg_co
-        attainment_data['po_attainment'] = avg_po
-    
-    return attainment_data
-
-# ==============================================================================
-# COLOR UTILITY FUNCTIONS (Kept from original)
-# ==============================================================================
-def get_color_by_value(value, metric_type):
-    # [Same as original]
-    pass
-
-def get_color_class(value, metric_type):
-    # [Same as original]
-    pass
-
-def get_metric_description(value, metric_type):
-    # [Same as original]
-    pass
-
-def create_colored_metric_card(title, value, metric_type="percentage", suffix="", prefix=""):
-    # [Same as original]
-    pass
-
-# ==============================================================================
-# PDF REPORT GENERATION (Kept from original)
-# ==============================================================================
-def generate_course_pdf_report(course_data, selected_course):
-    # [Same as original]
-    pass
-
-# ==============================================================================
-# EMAIL FUNCTIONS (Kept from original)
-# ==============================================================================
-def send_email(to_email, subject, body, pdf_buffer=None):
-    # [Same as original]
-    pass
-
-def generate_individual_student_pdf(student, semester, course_code, course_name):
-    # [Same as original]
-    pass
-
-def send_bulk_emails_to_parents(course_data, course_name):
-    # [Same as original]
-    pass
-
-# ==============================================================================
-# CHART GENERATION FUNCTIONS (Kept from original)
-# ==============================================================================
-def generate_marks_distribution_chart(course_data):
-    # [Same as original]
-    pass
-
-def generate_grade_distribution_chart(course_data):
-    # [Same as original]
-    pass
-
-def generate_co_attainment_chart(co_attainment):
-    # [Same as original]
-    pass
-
-def generate_po_attainment_chart(po_attainment):
-    # [Same as original]
-    pass
-
-# ==============================================================================
-# SPIDER/RADAR PLOT FOR PO ATTAINMENT
-# ==============================================================================
-def create_spider_plot(po_attainment):
-    """Create a spider/radar plot for PO attainment"""
-    if not po_attainment:
-        return None
-    
-    # Extract PO names and values
-    po_names = list(po_attainment.keys())
-    po_values = list(po_attainment.values())
-    
-    # Number of variables
-    num_vars = len(po_names)
-    
-    # Compute angle for each axis
-    angles = [n / float(num_vars) * 2 * np.pi for n in range(num_vars)]
-    angles += angles[:1]  # Complete the circle
-    
-    # Add the first value to close the polygon
-    values = po_values + [po_values[0]]
-    
-    # Create the plot
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(projection='polar'))
-    
-    # Draw one line per variable
-    ax.plot(angles, values, 'o-', linewidth=2, color='#667eea')
-    ax.fill(angles, values, alpha=0.25, color='#667eea')
-    
-    # Set labels
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(po_names, fontsize=10)
-    
-    # Set y-axis limits
-    max_val = max(po_values) if po_values else 100
-    ax.set_ylim(0, max(max_val * 1.2, 100))
-    
-    # Add value labels
-    for angle, value, name in zip(angles[:-1], values[:-1], po_names):
-        ax.annotate(f'{value:.1f}%', 
-                   xy=(angle, value),
-                   xytext=(5, 5),
-                   textcoords='offset points',
-                   fontsize=9,
-                   fontweight='bold')
-    
-    ax.set_title('PO Attainment (Spider Plot)', fontsize=14, fontweight='bold', pad=20)
-    ax.grid(True)
-    
-    return fig
-
-# ==============================================================================
-# STUDENT ANALYTICS PAGE (MODIFIED)
-# ==============================================================================
-def show_student_analytics():
-    """Show student analytics with CO-PO attainment and spider plots"""
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown("### Student Performance Analytics", unsafe_allow_html=True)
-    
-    # Help button
-    col_title, col_help = st.columns([4, 1])
-    with col_help:
-        if st.button("Help", key="student_analytics_help"):
-            st.info("""
-            **Student Analytics Help:**
-            
-            1. **Course-wise Results**: View your performance in each course
-            2. **CO Attainment**: Check Course Outcomes attainment for each course
-            3. **PO Attainment**: View Program Outcomes attainment with spider plot
-            4. **Class Position**: See your position in class
-            5. **Career Prediction**: AI-based career recommendations
-            """)
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Get student ID based on user type
-    student_id = ""
-    student_name = ""
-    
-    if st.session_state.user_type == "student":
-        student_id = st.session_state.user_data.get('student_id', '')
-        student_name = st.session_state.user_data.get('full_name', 'Student')
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8.5, 3.2))
         
-        if not student_id:
-            st.error("Student ID not found in your account.")
-            return
-    
-    elif st.session_state.user_type == "parent":
-        linked_student = get_linked_student_for_parent(st.session_state.username)
-        if linked_student:
-            student_id = linked_student.get('student_id', '')
-            student_name = linked_student.get('full_name', 'Your Child')
-        else:
-            st.error("No student linked to your account.")
-            return
-    
-    elif st.session_state.user_type in ["teacher", "admin"]:
-        # Load all student data
-        all_courses = load_all_courses()
-        all_students = {}
+        # Marks Distribution Histogram
+        ax1.hist(marks, bins=8, color='#667eea', edgecolor='white', alpha=0.85, linewidth=0.5)
+        ax1.set_title('Marks Distribution', fontsize=10, fontweight='bold', color='#1a237e')
+        ax1.set_xlabel('Total Marks', fontsize=8)
+        ax1.set_ylabel('Students', fontsize=8)
+        ax1.grid(True, alpha=0.2, linestyle='--')
+        ax1.tick_params(labelsize=7)
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['right'].set_visible(False)
         
-        if all_courses:
-            for course_key, course_data in all_courses.items():
-                for stu_id, stu_data in course_data.get('students', {}).items():
-                    if stu_id not in all_students:
-                        all_students[stu_id] = stu_data.get('name', stu_id)
-        
-        if all_students:
-            selected_student = st.selectbox(
-                "Select Student:",
-                list(all_students.keys()),
-                format_func=lambda x: f"{all_students[x]} ({x})"
-            )
-            student_id = selected_student
-            student_name = all_students[selected_student]
-    
-    if not student_id:
-        st.info("No student data available.")
-        return
-    
-    st.info(f"Viewing academic performance for: {student_name} ({student_id})")
-    
-    # Load student data
-    student_data = load_student_data(student_id)
-    
-    if not student_data:
-        st.info("No academic data found for this student.")
-        return
-    
-    # Tabs for different views
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "Course-wise Results",
-        "CO Attainment",
-        "PO Attainment",
-        "Class Position",
-        "Career Prediction"
-    ])
-    
-    with tab1:
-        show_course_wise_results(student_data, student_name)
-    
-    with tab2:
-        show_co_attainment_analysis(student_data, student_name)
-    
-    with tab3:
-        show_po_attainment_analysis(student_data, student_name)
-    
-    with tab4:
-        show_class_position(student_data, student_id, student_name)
-    
-    with tab5:
-        show_ai_career_prediction(student_data, student_id, student_name)
-
-def show_course_wise_results(student_data, student_name):
-    """Show course-wise results for a student"""
-    st.markdown(f"#### Course-wise Results for {student_name}")
-    
-    course_results = []
-    
-    for course_key, course_info in student_data.items():
-        student_course_data = course_info.get('student_data', {})
-        course_results.append({
-            'Course': course_info.get('course_code', course_key),
-            'Semester': course_info.get('semester', 'N/A'),
-            'Total Marks': student_course_data.get('total_marks', 0),
-            'Grade': student_course_data.get('grade', 'N/A'),
-            'SGPA': student_course_data.get('sgpa', 0),
-            'Status': student_course_data.get('status', 'N/A')
-        })
-    
-    if course_results:
-        df_results = pd.DataFrame(course_results)
-        
-        # Summary metrics
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            avg_marks = df_results['Total Marks'].mean()
-            st.metric("Average Marks", f"{avg_marks:.1f}")
-        with col2:
-            avg_sgpa = df_results['SGPA'].mean()
-            st.metric("Average SGPA", f"{avg_sgpa:.2f}")
-        with col3:
-            passed = len(df_results[df_results['Status'] == 'Pass'])
-            total = len(df_results)
-            st.metric("Pass Rate", f"{passed}/{total}")
-        
-        # Results table
-        st.dataframe(df_results, use_container_width=True, hide_index=True)
-        
-        # Marks bar chart
-        fig = go.Figure(data=[
-            go.Bar(
-                x=df_results['Course'],
-                y=df_results['Total Marks'],
-                marker_color='#667eea',
-                text=df_results['Total Marks'].round(1),
-                textposition='auto'
-            )
-        ])
-        fig.update_layout(
-            title="Marks by Course",
-            xaxis_title="Course",
-            yaxis_title="Total Marks",
-            yaxis_range=[0, 100],
-            height=400
+        # Grade Distribution Pie
+        grade_counts = pd.Series(grades).value_counts()
+        grade_colors = {
+            'A+': '#1B5E20', 'A': '#4CAF50', 'A-': '#8BC34A', 
+            'B+': '#CDDC39', 'B': '#FFC107', 'B-': '#FF9800', 
+            'C+': '#FF5722', 'C': '#9C27B0', 'D': '#673AB7', 'F': '#F44336'
+        }
+        colors_list = [grade_colors.get(g, '#999999') for g in grade_counts.index]
+        wedges, texts, autotexts = ax2.pie(
+            grade_counts.values, labels=grade_counts.index, 
+            colors=colors_list, autopct='%1.1f%%', 
+            startangle=90, pctdistance=0.75
         )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("No course results available.")
-
-def show_co_attainment_analysis(student_data, student_name):
-    """Show CO attainment analysis for each course"""
-    st.markdown(f"#### CO Attainment Analysis for {student_name}")
-    
-    all_co_data = {}
-    
-    for course_key, course_info in student_data.items():
-        student_course_data = course_info.get('student_data', {})
-        co_scores = student_course_data.get('co_scores', {})
+        for at in autotexts: 
+            at.set_color('white')
+            at.set_fontweight('bold')
+            at.set_fontsize(6)
+        for t in texts: 
+            t.set_fontsize(7)
+        ax2.set_title('Grade Distribution', fontsize=10, fontweight='bold', color='#1a237e')
         
-        if co_scores:
-            course_code = course_info.get('course_code', course_key)
-            all_co_data[course_code] = co_scores
+        plt.tight_layout(pad=1.5)
+        marks_buf = BytesIO()
+        plt.savefig(marks_buf, format='png', dpi=130, bbox_inches='tight', facecolor='white')
+        plt.close()
+        marks_buf.seek(0)
+        story.append(Image(marks_buf, width=7.5*inch, height=2.8*inch))
+        
+        story.append(PageBreak())
+        
+        # PAGE 2 - CO-PO ATTAINMENT
+        story.append(Paragraph("CO-PO Attainment Analysis", heading_style))
+        
+        co_attainment = course_data.get('co_attainment', {})
+        po_attainment = course_data.get('po_attainment', {})
+        
+        if co_attainment or po_attainment:
+            has_co = bool(co_attainment)
+            has_po = bool(po_attainment)
+            
+            if has_co and has_po:
+                fig2, (ax_co, ax_po) = plt.subplots(1, 2, figsize=(8.5, 3.2))
+                
+                # CO Attainment Bar Chart
+                cos = list(co_attainment.keys())
+                co_vals = list(co_attainment.values())
+                co_colors = ['#4CAF50' if v >= 80 else '#FFC107' if v >= 60 else '#F44336' for v in co_vals]
+                bars = ax_co.bar(cos, co_vals, color=co_colors, edgecolor='white', linewidth=0.5, alpha=0.85)
+                for bar, val in zip(bars, co_vals):
+                    ax_co.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1.5, 
+                              f'{val:.1f}%', ha='center', fontsize=7, fontweight='bold', color='#333')
+                ax_co.set_title('CO Attainment (Course Avg)', fontsize=10, fontweight='bold', color='#1a237e')
+                ax_co.set_ylabel('Percentage (%)', fontsize=8)
+                ax_co.set_ylim(0, max(co_vals) * 1.2 + 5 if co_vals else 105)
+                ax_co.grid(True, alpha=0.2, linestyle='--', axis='y')
+                ax_co.tick_params(labelsize=7)
+                ax_co.spines['top'].set_visible(False)
+                ax_co.spines['right'].set_visible(False)
+                
+                # PO Spider Plot
+                pos = list(po_attainment.keys())
+                po_vals = list(po_attainment.values())
+                num_vars = len(pos)
+                angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+                po_vals_plot = po_vals + [po_vals[0]]
+                angles += angles[:1]
+                
+                ax_po.remove()
+                ax_po = fig2.add_subplot(1, 2, 2, projection='polar')
+                ax_po.fill(angles, po_vals_plot, color='#667eea', alpha=0.2)
+                ax_po.plot(angles, po_vals_plot, color='#667eea', linewidth=1.5, marker='o', markersize=5, markerfacecolor='#764ba2')
+                ax_po.set_xticks(angles[:-1])
+                ax_po.set_xticklabels(pos, fontsize=7)
+                ax_po.set_ylim(0, 100)
+                ax_po.set_yticks([20, 40, 60, 80, 100])
+                ax_po.set_yticklabels(['20%', '40%', '60%', '80%', '100%'], fontsize=6, color='gray')
+                ax_po.grid(True, alpha=0.3, linestyle='--')
+                ax_po.set_title('PO Attainment (Course Avg)', fontsize=10, fontweight='bold', color='#1a237e', pad=15)
+                
+                for i, (angle, value) in enumerate(zip(angles[:-1], po_vals_plot[:-1])):
+                    ax_po.annotate(f'{value:.1f}%', xy=(angle, value), xytext=(4, 4),
+                                  textcoords='offset points', fontsize=6, fontweight='bold', color='#333')
+                
+                plt.tight_layout(pad=1.5)
+                copo_buf = BytesIO()
+                plt.savefig(copo_buf, format='png', dpi=130, bbox_inches='tight', facecolor='white')
+                plt.close()
+                copo_buf.seek(0)
+                story.append(Image(copo_buf, width=7.5*inch, height=2.8*inch))
+        
+        # STUDENT LIST
+        story.append(Spacer(1, 10))
+        story.append(Paragraph("Student Performance Summary", heading_style))
+        
+        sorted_students = sorted(students.items(), key=lambda x: x[1].get('total_marks', 0), reverse=True)
+        
+        student_table_data = [['#', 'Student ID', 'Name', 'Marks', 'Grade', 'SGPA', 'Status']]
+        
+        for rank, (sid, s) in enumerate(sorted_students[:30], 1):  # Limit to 30 students for PDF
+            name = s.get('name', 'N/A')[:22]
+            student_table_data.append([
+                str(rank), sid, name,
+                f"{s.get('total_marks', 0):.1f}",
+                s.get('grade', 'N/A'),
+                f"{s.get('sgpa', 0):.2f}",
+                s.get('status', 'N/A')
+            ])
+        
+        if len(sorted_students) > 30:
+            student_table_data.append(['...', '...', f'... and {len(sorted_students) - 30} more', '...', '...', '...', '...'])
+        
+        student_table = Table(student_table_data, colWidths=[20, 90, 160, 45, 38, 38, 50])
+        student_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a237e')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('ALIGN', (3, 1), (5, -1), 'CENTER'),
+            ('ALIGN', (6, 1), (6, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 7),
+            ('FONTSIZE', (0, 1), (-1, -1), 6.5),
+            ('GRID', (0, 0), (-1, -1), 0.3, colors.HexColor('#bdbdbd')),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f5f5f5'), colors.white]),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('LEFTPADDING', (0, 0), (-1, -1), 3),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 3),
+        ]))
+        story.append(student_table)
     
-    if not all_co_data:
-        st.info("No CO attainment data available.")
-        return
+    # FOOTER
+    story.append(Spacer(1, 15))
+    story.append(Paragraph(
+        f"Generated by EduTrack Pro 2026 | Stamford University Bangladesh | {datetime.now().strftime('%Y-%m-%d %H:%M')} | Page 2 of 2",
+        ParagraphStyle('Footer', parent=styles['Normal'], fontSize=6, alignment=1, textColor=colors.gray)
+    ))
     
-    # Course selection for CO view
-    selected_course = st.selectbox(
-        "Select Course for CO Analysis:",
-        list(all_co_data.keys())
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+# CHANGE PASSWORD PAGE
+def show_change_password_page():
+    """Allow logged-in users to change their password"""
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("## 🔐 Change Password")
+    
+    with st.form("change_password_form"):
+        current_password = st.text_input("Current Password", type="password", placeholder="Enter your current password")
+        new_password = st.text_input("New Password", type="password", placeholder="Enter new password")
+        confirm_password = st.text_input("Confirm New Password", type="password", placeholder="Confirm new password")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.form_submit_button("✅ Update Password", use_container_width=True):
+                if not current_password or not new_password:
+                    st.error("Please fill all fields")
+                elif new_password != confirm_password:
+                    st.error("New password and confirmation do not match")
+                elif len(new_password) < 4:
+                    st.error("Password must be at least 4 characters")
+                else:
+                    success, message = change_password(
+                        st.session_state.username,
+                        st.session_state.user_type,
+                        current_password,
+                        new_password
+                    )
+                    if success:
+                        st.success(message)
+                        st.balloons()
+                        st.session_state.show_change_password = False
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error(message)
+        
+        with col2:
+            if st.form_submit_button("❌ Cancel", use_container_width=True):
+                st.session_state.show_change_password = False
+                st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+# PAGES
+def show_login_page():
+    apply_professional_theme()
+    
+    st.markdown("""
+    <div style="text-align: center; margin: 3rem 0;">
+        <h1 style="font-size: 4rem;">🎓</h1>
+        <h2>EduTrack Pro 2026</h2>
+        <p style="color: #666;">Academic Analytics & Management System</p>
+        <p style="color: #888; font-size: 0.9rem;">Department of EEE, Stamford University Bangladesh</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col2:
+        with st.form("login_form"):
+            st.markdown("### 🔐 Login")
+            user_type = st.selectbox("Account Type", ["admin", "teacher", "student", "parent"])
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            
+            if st.form_submit_button("Login", use_container_width=True):
+                if username and password:
+                    success, user_data = authenticate_user(username, password, user_type)
+                    if success:
+                        st.session_state.logged_in = True
+                        st.session_state.user_type = user_type
+                        st.session_state.username = username
+                        st.session_state.user_data = user_data
+                        log_activity(username, "login")
+                        st.session_state.current_page = "upload" if user_type in ["teacher", "admin"] else "student_analytics"
+                        st.rerun()
+                    else:
+                        st.error("Invalid credentials")
+                else:
+                    st.warning("Please enter credentials")
+
+
+def show_upload_page():
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("## 📤 Upload Student Data")
+    st.markdown("Upload your Excel file with Midterm, Final, Assignment, CO, and PO analysis sheets")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        semester = st.text_input("Semester*", value=get_current_semester())
+    with col2:
+        course_code = st.text_input("Course Code*", value="EEE 321")
+    with col3:
+        course_name = st.text_input("Course Name*", value="Power System I")
+    
+    uploaded_file = st.file_uploader(
+        "Choose Excel file (.xlsx or .xls)",
+        type=['xlsx', 'xls'],
+        help="Upload your Excel file with sheets: Midterm Exam, Final Exam, Assignment, Analysis of CO, Analysis of PO"
     )
     
-    if selected_course:
-        co_scores = all_co_data[selected_course]
+    if uploaded_file:
+        st.success(f"📁 File uploaded: {uploaded_file.name}")
         
-        # CO attainment bar chart
-        cos = list(co_scores.keys())
-        scores = list(co_scores.values())
+        with st.expander("📄 File Preview", expanded=False):
+            try:
+                df_preview = pd.read_excel(uploaded_file, sheet_name=0, header=None, nrows=25)
+                st.dataframe(df_preview, use_container_width=True)
+            except:
+                st.warning("Could not preview file")
         
-        # Calculate percentages (assuming max 20 per CO)
-        percentages = [(score / 20) * 100 for score in scores]
-        
-        fig = go.Figure(data=[
-            go.Bar(
-                x=cos,
-                y=percentages,
-                marker_color=['#4CAF50' if p >= 50 else '#FFC107' if p >= 40 else '#F44336' for p in percentages],
-                text=[f'{p:.1f}%' for p in percentages],
-                textposition='auto'
-            )
-        ])
-        fig.update_layout(
-            title=f"CO Attainment - {selected_course}",
-            xaxis_title="Course Outcomes",
-            yaxis_title="Attainment (%)",
-            yaxis_range=[0, 100],
-            height=400
-        )
-        fig.add_hline(y=50, line_dash="dash", line_color="red", annotation_text="50% Threshold")
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # CO details table
-        co_details = []
-        for co, score in co_scores.items():
-            percentage = (score / 20) * 100
-            if percentage >= 50:
-                status = "Achieved"
-                color = "green"
-            elif percentage >= 40:
-                status = "Marginally Achieved"
-                color = "orange"
+        if st.button("🚀 Process & Analyze Data", type="primary", use_container_width=True):
+            if not semester or not course_code:
+                st.error("Please fill semester and course code")
             else:
-                status = "Not Achieved"
-                color = "red"
-            
-            co_details.append({
-                'CO': co,
-                'Score': f"{score:.1f}/20",
-                'Percentage': f"{percentage:.1f}%",
-                'Status': status
-            })
-        
-        df_co_details = pd.DataFrame(co_details)
-        st.dataframe(df_co_details, use_container_width=True, hide_index=True)
+                with st.spinner("🔍 Analyzing file structure..."):
+                    parsed = parse_excel_eee_format(uploaded_file)
+                    
+                    if parsed and parsed.get('students'):
+                        st.success(f"✅ Successfully parsed! Found {len(parsed.get('students', {}))} students")
+                        
+                        with st.expander("📊 Parsing Results", expanded=True):
+                            col_a, col_b, col_c = st.columns(3)
+                            with col_a:
+                                st.metric("Students", len(parsed.get('students', {})))
+                            with col_b:
+                                cos = parsed.get('co_columns', [])
+                                st.metric("COs", len(cos))
+                            with col_c:
+                                pos = parsed.get('po_columns', [])
+                                st.metric("POs (Auto-detected)", len(pos))
+                        
+                        results = convert_parsed_to_results(
+                            parsed, semester, course_code, course_name, st.session_state.username
+                        )
+                        
+                        st.session_state.results = results
+                        st.session_state.processed = True
+                        
+                        # Save course data
+                        import pickle
+                        save_course_data(semester, course_code, results)
+                        track_teacher_upload(
+                            st.session_state.username, semester, course_code,
+                            uploaded_file.name, len(results['students'])
+                        )
+                        
+                        # Save individual student data
+                        for student_id, student_data in results['students'].items():
+                            student_file = Path("course_data") / f"student_{student_id.replace(' ', '_')}.pkl"
+                            existing = {}
+                            if student_file.exists():
+                                with open(student_file, 'rb') as f:
+                                    existing = pickle.load(f)
+                            
+                            existing[f"{semester}_{course_code}"] = {
+                                'course_code': course_code,
+                                'semester': semester,
+                                'student_data': student_data,
+                                'co_attainment': results.get('co_attainment', {}),
+                                'po_attainment': student_data.get('po_scores', results.get('po_attainment', {})),
+                                'co_po_mapping': parsed.get('co_po_mapping', {}),
+                            }
+                            
+                            with open(student_file, 'wb') as f:
+                                pickle.dump(existing, f)
+                        
+                        stats = results.get('course_stats', {})
+                        col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+                        with col_m1:
+                            st.metric("Students", stats.get('total_students', 0))
+                        with col_m2:
+                            st.metric("Avg Marks", f"{stats.get('average_marks', 0):.1f}")
+                        with col_m3:
+                            st.metric("Pass Rate", f"{stats.get('pass_percentage', 0):.1f}%")
+                        with col_m4:
+                            st.metric("Avg SGPA", f"{stats.get('average_sgpa', 0):.2f}")
+                        
+                        st.success("✅ Data processed successfully!")
+                    else:
+                        st.error("❌ Could not parse file. Please check the format matches EEE department template")
     
-    # Overall CO attainment across all courses
-    st.markdown("---")
-    st.markdown("#### Overall CO Attainment (All Courses)")
-    
-    # Calculate average CO scores across courses
-    avg_co_scores = {}
-    for course_code, co_scores in all_co_data.items():
-        for co, score in co_scores.items():
-            if co not in avg_co_scores:
-                avg_co_scores[co] = []
-            avg_co_scores[co].append(score)
-    
-    avg_co = {co: np.mean(scores) for co, scores in avg_co_scores.items()}
-    
-    if avg_co:
-        avg_percentages = [(score / 20) * 100 for score in avg_co.values()]
-        
-        fig_avg = go.Figure(data=[
-            go.Bar(
-                x=list(avg_co.keys()),
-                y=avg_percentages,
-                marker_color='#667eea',
-                text=[f'{p:.1f}%' for p in avg_percentages],
-                textposition='auto'
-            )
-        ])
-        fig_avg.update_layout(
-            title="Average CO Attainment Across All Courses",
-            xaxis_title="Course Outcomes",
-            yaxis_title="Attainment (%)",
-            yaxis_range=[0, 100],
-            height=400
-        )
-        fig_avg.add_hline(y=50, line_dash="dash", line_color="red", annotation_text="50% Threshold")
-        st.plotly_chart(fig_avg, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-def show_po_attainment_analysis(student_data, student_name):
-    """Show PO attainment analysis with spider plot"""
-    st.markdown(f"#### PO Attainment Analysis for {student_name}")
-    st.markdown("Program Outcomes (PO) attainment based on all completed courses")
-    
-    # Calculate PO attainment from CO scores and CO-PO mapping
-    all_po_data = {}
-    
-    for course_key, course_info in student_data.items():
-        student_course_data = course_info.get('student_data', {})
-        co_scores = student_course_data.get('co_scores', {})
-        
-        if co_scores:
-            # Get CO-PO mapping for this course
-            course_data = load_all_courses().get(course_key, {})
-            co_po_mapping = course_data.get('co_po_mapping')
-            
-            if co_po_mapping is None:
-                # Use default mapping if not available
-                co_po_mapping = create_default_copo_mapping()
-            
-            # Calculate PO attainment
-            po_attainment = calculate_po_attainment(
-                {co: score / 20 * 100 for co, score in co_scores.items()},
-                co_po_mapping
-            )
-            
-            if po_attainment:
-                course_code = course_info.get('course_code', course_key)
-                all_po_data[course_code] = po_attainment
-    
-    if not all_po_data:
-        st.info("No PO attainment data available.")
-        return
-    
-    # Calculate average PO attainment across courses
-    avg_po = {}
-    for course_code, po_scores in all_po_data.items():
-        for po, score in po_scores.items():
-            if po not in avg_po:
-                avg_po[po] = []
-            avg_po[po].append(score)
-    
-    overall_po = {po: np.mean(scores) for po, scores in avg_po.items() if scores}
-    
-    if overall_po:
-        # Create spider plot
-        st.markdown("##### PO Attainment Spider Plot")
-        spider_fig = create_spider_plot(overall_po)
-        if spider_fig:
-            st.pyplot(spider_fig)
-        
-        # PO details table
-        st.markdown("##### PO Attainment Details")
-        po_details = []
-        for po, score in overall_po.items():
-            if score >= 70:
-                status = "Excellent"
-                color = "#4CAF50"
-            elif score >= 50:
-                status = "Satisfactory"
-                color = "#FFC107"
-            else:
-                status = "Needs Improvement"
-                color = "#F44336"
-            
-            po_details.append({
-                'PO': po,
-                'Attainment': f"{score:.1f}%",
-                'Status': status
-            })
-        
-        df_po = pd.DataFrame(po_details)
-        st.dataframe(df_po, use_container_width=True, hide_index=True)
-        
-        # Course-wise PO comparison
-        st.markdown("##### Course-wise PO Attainment")
-        course_for_po = st.selectbox(
-            "Select Course for PO View:",
-            list(all_po_data.keys())
-        )
-        
-        if course_for_po:
-            course_po = all_po_data[course_for_po]
-            
-            pos = list(course_po.keys())
-            values = list(course_po.values())
-            
-            fig_course_po = go.Figure(data=[
-                go.Bar(
-                    x=pos,
-                    y=values,
-                    marker_color=['#4CAF50' if v >= 70 else '#FFC107' if v >= 50 else '#F44336' for v in values],
-                    text=[f'{v:.1f}%' for v in values],
-                    textposition='auto'
-                )
-            ])
-            fig_course_po.update_layout(
-                title=f"PO Attainment - {course_for_po}",
-                xaxis_title="Program Outcomes",
-                yaxis_title="Attainment (%)",
-                yaxis_range=[0, 100],
-                height=400
-            )
-            fig_course_po.add_hline(y=50, line_dash="dash", line_color="red", annotation_text="50% Threshold")
-            st.plotly_chart(fig_course_po, use_container_width=True)
 
-def show_class_position(student_data, student_id, student_name):
-    """Show student's class position for each course"""
-    st.markdown(f"#### Class Position for {student_name}")
-    
-    for course_key, course_info in student_data.items():
-        student_course_data = course_info.get('student_data', {})
-        course_code = course_info.get('course_code', course_key)
-        
-        # Get all students for this course
-        all_courses = load_all_courses()
-        course_full_data = all_courses.get(course_key, {})
-        all_students = course_full_data.get('students', {})
-        
-        if all_students and student_id in all_students:
-            # Sort students by marks
-            sorted_students = sorted(all_students.items(), 
-                                    key=lambda x: x[1].get('total_marks', 0), 
-                                    reverse=True)
-            
-            # Find student's position
-            position = next((i + 1 for i, (sid, _) in enumerate(sorted_students) 
-                           if sid == student_id), len(sorted_students))
-            
-            total_students = len(sorted_students)
-            student_marks = student_course_data.get('total_marks', 0)
-            highest_marks = sorted_students[0][1].get('total_marks', 0) if sorted_students else 0
-            avg_marks = np.mean([s[1].get('total_marks', 0) for s in sorted_students])
-            
-            with st.expander(f"{course_code} - Position: {position}/{total_students}", expanded=True):
-                col1, col2, col3, col4 = st.columns(4)
-                with col1:
-                    st.metric("Your Position", f"{position}/{total_students}")
-                with col2:
-                    st.metric("Your Marks", f"{student_marks:.1f}")
-                with col3:
-                    st.metric("Highest Marks", f"{highest_marks:.1f}")
-                with col4:
-                    st.metric("Class Average", f"{avg_marks:.1f}")
-                
-                # Position visualization
-                fig = go.Figure()
-                
-                # All students as bars
-                marks_list = [s[1].get('total_marks', 0) for s in sorted_students]
-                names_list = [f"Student {i+1}" for i in range(len(sorted_students))]
-                
-                colors = ['#667eea'] * len(sorted_students)
-                if position <= len(sorted_students):
-                    colors[position - 1] = '#4CAF50'  # Highlight student
-                
-                fig.add_trace(go.Bar(
-                    x=list(range(1, len(sorted_students) + 1)),
-                    y=marks_list,
-                    marker_color=colors,
-                    text=[f'{m:.1f}' for m in marks_list],
-                    textposition='auto'
-                ))
-                
-                fig.update_layout(
-                    title=f"Class Ranking - {course_code}",
-                    xaxis_title="Student Rank",
-                    yaxis_title="Total Marks",
-                    height=300,
-                    showlegend=False
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-
-def show_ai_career_prediction(student_data, student_id, student_name):
-    """Show AI-powered career predictions"""
-    st.markdown(f"#### AI Career Prediction for {student_name}")
-    
-    st.warning("""
-    **DISCLAIMER**
-    
-    This prediction is AI-generated and should be considered as guidance only.
-    Discuss career choices with your academic supervisor and career counselor.
-    """)
-    
-    # Get predictions from student data
-    predictions = None
-    for course_key, course_info in student_data.items():
-        if 'predictions' in course_info and course_info['predictions']:
-            predictions = course_info['predictions']
-            break
-    
-    if not predictions:
-        # Generate rule-based prediction if no ML prediction available
-        if student_data:
-            latest_course_key = sorted(student_data.keys())[-1]
-            latest_student_data = student_data[latest_course_key].get('student_data', {})
-            predictions = generate_rule_based_prediction(latest_student_data)
-    
-    if predictions:
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("##### Current Assessment")
-            st.info(f"**Performance:** {predictions.get('current_performance', 'Not available')}")
-            
-            st.markdown("##### Key Strengths")
-            strengths = predictions.get('key_strengths', [])
-            if strengths:
-                for strength in strengths:
-                    st.markdown(f"- {strength}")
-            else:
-                st.info("Developing core competencies")
-        
-        with col2:
-            st.markdown("##### Recommended Career Path")
-            career_sector = predictions.get('recommended_career_sector', 'Not available')
-            
-            career_colors = {
-                "Research & Academia": "#4CAF50",
-                "Power Systems & Energy": "#2196F3",
-                "Electronics & Embedded Systems": "#FF9800",
-                "Control & Automation": "#9C27B0",
-                "Telecommunications": "#00BCD4",
-                "Renewable Energy": "#8BC34A",
-                "AI & Machine Learning in EEE": "#FF5722"
-            }
-            
-            color = career_colors.get(career_sector, "#667eea")
-            st.markdown(f"""
-            <div style="text-align: center; padding: 1.5rem; background: {color}20; border-radius: 15px; border: 2px solid {color};">
-                <h3 style="color: {color};">{career_sector}</h3>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("##### Recommendations")
-            recommendation = predictions.get('recommendation', 'Continue developing your skills')
-            st.success(recommendation)
-        
-        # CO-PO based career insight
-        st.markdown("---")
-        st.markdown("##### Career Insights Based on CO-PO Attainment")
-        
-        # Analyze CO and PO strengths
-        co_strengths = []
-        po_strengths = []
-        
-        for course_key, course_info in student_data.items():
-            student_course_data = course_info.get('student_data', {})
-            co_scores = student_course_data.get('co_scores', {})
-            
-            for co, score in co_scores.items():
-                if score >= 15:
-                    co_strengths.append(co)
-        
-        if co_strengths:
-            st.markdown("**Strong Course Outcomes:**")
-            for co in set(co_strengths):
-                st.markdown(f"- {co}: Above 75% attainment")
-            
-            # Career recommendations based on CO strengths
-            st.markdown("**Career Sectors Aligned with Your Strengths:**")
-            career_recommendations = []
-            
-            if 'CO1' in co_strengths:
-                career_recommendations.append("Power Systems & Energy Sector (Strong theoretical foundation)")
-            if 'CO2' in co_strengths:
-                career_recommendations.append("Research & Development (Strong problem-solving skills)")
-            if 'CO3' in co_strengths:
-                career_recommendations.append("Control & Automation (Strong analytical skills)")
-            if 'CO4' in co_strengths:
-                career_recommendations.append("Project Management & Consulting (Strong professional skills)")
-            
-            if career_recommendations:
-                for rec in career_recommendations:
-                    st.markdown(f"- {rec}")
-            else:
-                st.info("Build stronger CO attainment for specialized career paths")
-    else:
-        st.info("No prediction data available yet. More academic data is needed for accurate predictions.")
-
-# ==============================================================================
-# TEACHER COURSE REPORT PAGE (MODIFIED)
-# ==============================================================================
 def show_course_reports():
-    """Show course reports for teachers - can only see their own courses"""
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown("<h3>Course Reports & Analytics</h3>", unsafe_allow_html=True)
+    st.markdown("## 📊 Course Reports & Analytics")
     
-    # Load all courses
     all_courses = load_all_courses()
     
     if not all_courses:
-        st.info("No course data available yet. Please upload data first.")
-        if st.button("Go to Upload Page"):
+        st.info("ℹ️ No course data available. Please upload data first.")
+        if st.button("Go to Upload Page", use_container_width=True):
             st.session_state.current_page = "upload"
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
         return
     
-    # Filter courses for teacher - only show their courses
+    # Filter courses for teacher (only show their own uploads)
     if st.session_state.user_type == "teacher":
-        teacher_courses = {}
-        for course_key, course_data in all_courses.items():
-            if course_data.get('teacher') == st.session_state.username:
-                teacher_courses[course_key] = course_data
+        teacher_courses = {
+            k: v for k, v in all_courses.items() 
+            if v.get('teacher') == st.session_state.username
+        }
         all_courses = teacher_courses
         
         if not teacher_courses:
-            st.info("You haven't uploaded any course data yet.")
-            if st.button("Upload Course Data"):
+            st.info("ℹ️ You haven't uploaded any courses yet.")
+            if st.button("Upload Course Data", use_container_width=True):
                 st.session_state.current_page = "upload"
                 st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
             return
     
-    # Course selection
-    selected_course = st.selectbox(
-        "Select Course Report",
-        list(all_courses.keys())
-    )
+    selected_course = st.selectbox("Select Course", list(all_courses.keys()))
     
     if selected_course:
         course_data = all_courses[selected_course]
+        stats = course_data.get('course_stats', {})
+        students = course_data.get('students', {})
         
-        # Display course information
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown(f"**Semester:** {course_data.get('semester', 'N/A')}")
-        with col2:
-            st.markdown(f"**Course Code:** {course_data.get('course_code', 'N/A')}")
-        with col3:
-            stats = course_data.get('course_stats', {})
-            st.markdown(f"**Total Students:** {stats.get('total_students', 0)}")
+        # ACTION BUTTONS
+        st.markdown("#### 📋 Actions")
+        col_action1, col_action2 = st.columns(2)
         
-        # PDF Download
-        st.markdown("---")
-        if st.button("Download PDF Report", type="primary", use_container_width=True):
-            with st.spinner("Generating PDF report..."):
-                pdf_buffer = generate_course_pdf_report(course_data, selected_course)
+        with col_action1:
+            if st.button("📄 Download Comprehensive PDF Report", use_container_width=True, type="primary"):
+                with st.spinner("Generating comprehensive PDF report..."):
+                    pdf_buffer = generate_comprehensive_pdf_report(course_data, selected_course)
+                    
+                    st.download_button(
+                        label="⬇️ Click to Download PDF Report",
+                        data=pdf_buffer,
+                        file_name=f"Course_Report_{course_data.get('course_code', 'COURSE')}_{course_data.get('semester', 'SEM').replace(' ', '_')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                        key="download_pdf_report"
+                    )
+                    st.success("✅ PDF report generated successfully!")
+        
+        with col_action2:
+            users = load_users()
+            valid_emails = 0
+            for student_id in students.keys():
+                for s_info in users.get('students', {}).values():
+                    if s_info.get('student_id') == student_id:
+                        if s_info.get('parent_email'):
+                            valid_emails += 1
+                        break
+            
+            if st.button(f"📧 Send Bulk Emails to Parents ({valid_emails} recipients)", use_container_width=True):
+                st.session_state.show_email_modal = selected_course
+                st.rerun()
+        
+        # Bulk email modal
+        if st.session_state.get('show_email_modal') == selected_course:
+            st.markdown("---")
+            st.markdown("### 📧 Send Results to Parents")
+            
+            users = load_users()
+            email_recipients = []
+            
+            for student_id, student_data in students.items():
+                parent_email = None
+                parent_name = "Parent"
                 
-                st.download_button(
-                    label="Download PDF Report",
-                    data=pdf_buffer,
-                    file_name=f"Course_Report_{course_data.get('course_code', 'Unknown')}.pdf",
-                    mime="application/pdf",
-                    use_container_width=True
-                )
-                st.success("PDF report generated successfully!")
+                for s_username, s_info in users.get('students', {}).items():
+                    if s_info.get('student_id') == student_id:
+                        parent_email = s_info.get('parent_email', '')
+                        parent_name = s_info.get('parent_name', 'Parent')
+                        break
+                
+                if not parent_email:
+                    for p_username, p_info in users.get('parents', {}).items():
+                        if p_info.get('student_linked') == student_id:
+                            parent_email = p_info.get('email', '')
+                            parent_name = p_info.get('full_name', 'Parent')
+                            break
+                
+                if parent_email and parent_email not in ['', 'nan', 'NaN']:
+                    email_recipients.append({
+                        'student_id': student_id,
+                        'student_name': student_data.get('name', 'N/A'),
+                        'parent_name': parent_name,
+                        'parent_email': parent_email,
+                        'grade': student_data.get('grade', 'N/A'),
+                        'marks': student_data.get('total_marks', 0)
+                    })
+            
+            if email_recipients:
+                st.info(f"📧 Found **{len(email_recipients)}** parents with valid emails")
+                
+                preview_data = []
+                for r in email_recipients[:10]:
+                    preview_data.append({
+                        'Student': r['student_name'],
+                        'Parent': r['parent_name'],
+                        'Email': r['parent_email'],
+                        'Grade': r['grade']
+                    })
+                st.dataframe(pd.DataFrame(preview_data), use_container_width=True)
+                
+                if len(email_recipients) > 10:
+                    st.caption(f"...and {len(email_recipients) - 10} more")
+                
+                col_confirm1, col_confirm2 = st.columns(2)
+                with col_confirm1:
+                    if st.button("📤 Send Bulk Emails Now", type="primary", use_container_width=True):
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+                        success_count = 0
+                        fail_count = 0
+                        
+                        for idx, recipient in enumerate(email_recipients):
+                            status_text.text(f"Sending: {recipient['student_name']} ({idx+1}/{len(email_recipients)})")
+                            
+                            body = f"""
+                            <html>
+                            <body style="font-family: Arial, sans-serif;">
+                                <div style="max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 10px;">
+                                    <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 20px; text-align: center;">
+                                        <h2 style="color: white;">🎓 EduTrack Pro 2026</h2>
+                                        <p style="color: white;">Academic Result</p>
+                                    </div>
+                                    <div style="padding: 20px;">
+                                        <p>Dear <strong>{recipient['parent_name']}</strong>,</p>
+                                        <p>Result for <strong>{recipient['student_name']}</strong>:</p>
+                                        <p>📊 Marks: <strong>{recipient['marks']:.1f}/100</strong></p>
+                                        <p>🏆 Grade: <strong style="font-size: 20px;">{recipient['grade']}</strong></p>
+                                        <p style="color: #666;">📚 Course: {selected_course}</p>
+                                        <hr>
+                                        <p style="font-size: 12px; color: #999;">EduTrack Pro 2026 - Stamford University Bangladesh</p>
+                                    </div>
+                                </div>
+                            </body>
+                            </html>
+                            """
+                            
+                            success, _ = send_email(recipient['parent_email'], 
+                                                   f"Result - {recipient['student_name']}", body)
+                            if success:
+                                success_count += 1
+                            else:
+                                fail_count += 1
+                            
+                            progress_bar.progress((idx + 1) / len(email_recipients))
+                        
+                        status_text.empty()
+                        if success_count > 0:
+                            st.success(f"✅ Sent {success_count} emails!")
+                        if fail_count > 0:
+                            st.error(f"❌ Failed: {fail_count}")
+                        
+                        st.session_state.show_email_modal = None
+                        log_activity(st.session_state.username, "bulk_email", f"Sent {success_count} emails for {selected_course}")
+                
+                with col_confirm2:
+                    if st.button("❌ Cancel", use_container_width=True):
+                        st.session_state.show_email_modal = None
+                        st.rerun()
+            else:
+                st.warning("⚠️ No parent emails found. Please register parents first.")
+                if st.button("Close", use_container_width=True):
+                    st.session_state.show_email_modal = None
+                    st.rerun()
         
-        # KPI Metrics
-        if stats:
-            st.markdown("#### Performance Metrics")
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.markdown(create_colored_metric_card(
-                    "Avg Marks", stats.get("average_marks", 0), "marks", ""
-                ), unsafe_allow_html=True)
-            with col2:
-                st.markdown(create_colored_metric_card(
-                    "Pass Rate", stats.get("pass_percentage", 0), "pass_rate", "%"
-                ), unsafe_allow_html=True)
-            with col3:
-                st.markdown(create_colored_metric_card(
-                    "Avg SGPA", stats.get("average_sgpa", 0), "cgpa", ""
-                ), unsafe_allow_html=True)
-            with col4:
-                st.markdown(create_colored_metric_card(
-                    "Highest", stats.get("highest_marks", 0), "marks", ""
-                ), unsafe_allow_html=True)
+        # KPI METRICS
+        st.markdown("---")
+        st.markdown("#### 📈 Performance Metrics")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total Students", stats.get('total_students', 0))
+        with col2:
+            st.metric("Average Marks", f"{stats.get('average_marks', 0):.1f}")
+        with col3:
+            st.metric("Pass Rate", f"{stats.get('pass_percentage', 0):.1f}%")
+        with col4:
+            st.metric("Average SGPA", f"{stats.get('average_sgpa', 0):.2f}")
         
-        # Charts
-        st.markdown("#### Visual Analytics")
-        
+        # TABS
+        st.markdown("---")
         tab1, tab2, tab3, tab4 = st.tabs([
-            "Marks Distribution",
-            "Grade Distribution",
-            "CO-PO Attainment",
-            "Students"
+            "📊 Marks Distribution", 
+            "🎯 CO Attainment", 
+            "📐 PO Attainment", 
+            "👥 Student List"
         ])
         
         with tab1:
-            # Marks distribution
-            students = course_data.get('students', {})
-            marks = [student['total_marks'] for student in students.values()]
-            
-            fig1 = go.Figure()
-            fig1.add_trace(go.Histogram(
-                x=marks, nbinsx=10,
-                marker_color='#667eea', opacity=0.7
-            ))
-            fig1.update_layout(
-                title="Marks Distribution",
-                xaxis_title="Total Marks",
-                yaxis_title="Number of Students",
-                height=400
+            st.markdown("### 📊 Marks Distribution")
+            marks = [s.get('total_marks', 0) for s in students.values()]
+            fig_hist = px.histogram(
+                x=marks, nbins=10, title="Marks Distribution",
+                labels={'x': 'Total Marks', 'y': 'Number of Students'},
+                color_discrete_sequence=['#667eea']
             )
-            st.plotly_chart(fig1, use_container_width=True)
+            fig_hist.update_layout(template='plotly_white', height=400)
+            st.plotly_chart(fig_hist, use_container_width=True)
             
-            col_stats1, col_stats2, col_stats3 = st.columns(3)
-            with col_stats1:
-                st.metric("Mean", f"{np.mean(marks):.1f}")
-            with col_stats2:
-                st.metric("Median", f"{np.median(marks):.1f}")
-            with col_stats3:
-                st.metric("Std Dev", f"{np.std(marks):.1f}")
+            col_d1, col_d2 = st.columns(2)
+            with col_d1:
+                st.metric("Highest Marks", f"{stats.get('highest_marks', 0):.1f}")
+                st.metric("Lowest Marks", f"{stats.get('lowest_marks', 0):.1f}")
+            with col_d2:
+                st.metric("Std Deviation", f"{stats.get('std_deviation', 0):.2f}")
+                st.metric("Grade Range", f"A+ to F")
         
         with tab2:
-            # Grade distribution
-            grades = [student['grade'] for student in students.values()]
-            grade_counts = pd.Series(grades).value_counts()
+            st.markdown("### 🎯 CO Attainment (Course Average)")
+            st.info("📌 These are course averages. Individual student CO attainment varies.")
             
-            fig2 = go.Figure(data=[go.Pie(
-                labels=grade_counts.index,
-                values=grade_counts.values,
-                hole=.3,
-                marker_colors=['#4CAF50', '#8BC34A', '#FFC107', '#FF9800', '#FF5722', '#F44336'],
-                textinfo='label+percent'
-            )])
-            fig2.update_layout(title="Grade Distribution", height=500)
-            st.plotly_chart(fig2, use_container_width=True)
-        
-        with tab3:
-            # CO-PO Attainment for this course
             co_attainment = course_data.get('co_attainment', {})
-            po_attainment = course_data.get('po_attainment', {})
-            
             if co_attainment:
                 cos = list(co_attainment.keys())
-                co_values = list(co_attainment.values())
-                
-                fig3 = go.Figure(data=[go.Bar(
-                    x=cos, y=co_values,
-                    marker_color=[get_color_by_value(v, "attainment") for v in co_values],
-                    text=[f'{v:.1f}%' for v in co_values],
-                    textposition='auto'
+                vals = list(co_attainment.values())
+                fig_co = go.Figure(data=[go.Bar(
+                    x=cos, y=vals,
+                    text=[f'{v:.1f}%' for v in vals],
+                    textposition='auto',
+                    marker_color=['#4CAF50' if v >= 80 else '#FFC107' if v >= 60 else '#F44336' for v in vals]
                 )])
-                fig3.update_layout(
-                    title="CO Attainment",
-                    yaxis_title="Attainment (%)",
-                    yaxis_range=[0, 100],
-                    height=400
-                )
-                st.plotly_chart(fig3, use_container_width=True)
+                fig_co.update_layout(template='plotly_white', height=400, yaxis_title="Percentage (%)")
+                st.plotly_chart(fig_co, use_container_width=True)
+            else:
+                st.info("No CO attainment data available")
+        
+        with tab3:
+            st.markdown("### 📐 PO Attainment (Course Average)")
+            st.info(f"📌 Auto-detected {len(course_data.get('po_columns', []))} POs from the uploaded file")
             
+            po_attainment = course_data.get('po_attainment', {})
             if po_attainment:
                 pos = list(po_attainment.keys())
-                po_values = list(po_attainment.values())
-                
-                fig4 = go.Figure(data=[go.Bar(
-                    x=pos, y=po_values,
-                    marker_color=[get_color_by_value(v, "attainment") for v in po_values],
-                    text=[f'{v:.1f}%' for v in po_values],
-                    textposition='auto'
-                )])
-                fig4.update_layout(
-                    title="PO Attainment",
-                    yaxis_title="Attainment (%)",
-                    yaxis_range=[0, 100],
-                    height=400
-                )
-                st.plotly_chart(fig4, use_container_width=True)
-                
-                # Spider plot for PO
-                st.markdown("##### PO Attainment Spider Plot")
-                spider_fig = create_spider_plot(po_attainment)
-                if spider_fig:
-                    st.pyplot(spider_fig)
-            
-            if not co_attainment and not po_attainment:
-                st.info("CO-PO attainment data not available for this course.")
+                po_vals = list(po_attainment.values())
+                if len(pos) >= 3:
+                    fig = create_spider_plot(po_vals, pos, "PO Attainment (Course Average)")
+                    st.pyplot(fig)
+                else:
+                    fig_po = go.Figure(data=[go.Bar(
+                        x=pos, y=po_vals,
+                        text=[f'{v:.1f}%' for v in po_vals],
+                        textposition='auto',
+                        marker_color='#764ba2'
+                    )])
+                    fig_po.update_layout(template='plotly_white', height=400, yaxis_title="Percentage (%)")
+                    st.plotly_chart(fig_po, use_container_width=True)
+            else:
+                st.info("No PO attainment data available")
         
         with tab4:
-            # Student details
-            student_data = []
-            for student_id, student in students.items():
-                student_data.append({
-                    'ID': student_id,
-                    'Name': student['name'],
-                    'Total Marks': student['total_marks'],
-                    'Grade': student['grade'],
-                    'SGPA': student['sgpa'],
-                    'Status': student['status']
+            st.markdown("### 👥 Student List")
+            
+            search_term = st.text_input("🔍 Search by Name or ID", placeholder="Type to filter...")
+            
+            sorted_students = sorted(students.items(), key=lambda x: x[1].get('total_marks', 0), reverse=True)
+            
+            if search_term:
+                sorted_students = [(sid, s) for sid, s in sorted_students 
+                                  if search_term.lower() in sid.lower() or 
+                                  search_term.lower() in s.get('name', '').lower()]
+            
+            student_table_data = []
+            for rank, (sid, s) in enumerate(sorted_students, 1):
+                student_table_data.append({
+                    'Rank': rank,
+                    'Student ID': sid,
+                    'Name': s.get('name', 'N/A'),
+                    'Total Marks': f"{s.get('total_marks', 0):.1f}",
+                    'Grade': s.get('grade', 'N/A'),
+                    'SGPA': f"{s.get('sgpa', 0):.2f}",
+                    'Status': s.get('status', 'N/A')
                 })
             
-            df_students = pd.DataFrame(student_data)
-            st.dataframe(
-                df_students.sort_values('Total Marks', ascending=False),
-                use_container_width=True,
-                height=400
-            )
-        
-        # Email section for teachers
-        if st.session_state.user_type == "teacher":
-            st.markdown("---")
-            st.markdown("#### Send Reports to Parents")
-            
-            valid_emails = len([s for s in students.values() 
-                              if s.get('parent_email') and s.get('parent_email') not in ['', 'nan', 'NaN']])
-            st.info(f"{valid_emails} parent emails found out of {len(students)} students")
-            
-            if st.button("Send Bulk Emails", type="primary", use_container_width=True):
-                with st.spinner("Sending emails to parents..."):
-                    success, fail, log, _ = send_bulk_emails_to_parents(course_data, selected_course)
-                    
-                    if success > 0:
-                        st.success(f"Successfully sent: {success} emails")
-                    if fail > 0:
-                        st.error(f"Failed: {fail} emails")
-                    
-                    with st.expander("Email Log", expanded=True):
-                        for entry in log:
-                            st.text(entry)
-    
-    # Back button
-    if st.button("Back to Dashboard", use_container_width=True):
-        st.session_state.current_page = "dashboard"
-        st.rerun()
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ==============================================================================
-# DATA PROCESSING (MODIFIED FOR DYNAMIC CO-PO)
-# ==============================================================================
-def process_student_data(df, semester, course_code, teacher_username, filename):
-    """Process student data with dynamic CO and PO detection"""
-    results = {
-        'students': {},
-        'course_stats': {},
-        'co_attainment': {},
-        'po_attainment': {},
-        'semester': semester,
-        'course_code': course_code,
-        'teacher': teacher_username,
-        'filename': filename,
-        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-    
-    # Detect CO and PO columns dynamically
-    co_columns = [col for col in df.columns if 'co' in str(col).lower()]
-    po_columns = [col for col in df.columns if 'po' in str(col).lower()]
-    
-    co_scores_all = []
-    
-    for idx, row in df.iterrows():
-        try:
-            student_id = str(row.get('Student_ID', f'STU{idx}'))
-            student_name = str(row.get('Student_Name', f'Student {idx}'))
-            
-            # Extract marks from different components
-            marks = {}
-            
-            # Mid term
-            mid_cols = [col for col in df.columns if 'mid' in str(col).lower()]
-            mid_total = sum([float(row[col]) for col in mid_cols if pd.notna(row.get(col, 0))])
-            
-            # Final
-            final_cols = [col for col in df.columns if 'final' in str(col).lower()]
-            final_total = sum([float(row[col]) for col in final_cols if pd.notna(row.get(col, 0))])
-            
-            # Class Test
-            ct_cols = [col for col in df.columns if 'ct' in str(col).lower()]
-            ct_total = sum([float(row[col]) for col in ct_cols if pd.notna(row.get(col, 0))]) / max(1, len(ct_cols))
-            
-            # Assignment
-            assignment_cols = [col for col in df.columns if 'assignment' in str(col).lower()]
-            assignment_total = sum([float(row[col]) for col in assignment_cols if pd.notna(row.get(col, 0))])
-            
-            # Attendance
-            attendance = float(row.get('Attendance', 0)) if pd.notna(row.get('Attendance', 0)) else 0
-            
-            # Scale to expected ranges
-            mid_scaled = min(30, mid_total) if mid_total > 0 else 0
-            final_scaled = min(40, final_total) if final_total > 0 else 0
-            ct_scaled = min(20, ct_total) if ct_total > 0 else 0
-            assignment_scaled = min(5, assignment_total) if assignment_total > 0 else 0
-            attendance_scaled = min(5, attendance) if attendance > 0 else 0
-            
-            total_marks = mid_scaled + final_scaled + ct_scaled + assignment_scaled + attendance_scaled
-            
-            # Calculate SGPA and Grade
-            sgpa = calculate_sgpa(total_marks)
-            grade = get_grade_from_marks(total_marks)
-            
-            # Extract CO scores dynamically
-            co_scores = {}
-            for co_col in co_columns:
-                val = row.get(co_col, 0)
-                co_scores[co_col] = float(val) if pd.notna(val) else 0
-            
-            # Extract PO scores if available
-            po_scores = {}
-            for po_col in po_columns:
-                val = row.get(po_col, 0)
-                po_scores[po_col] = float(val) if pd.notna(val) else 0
-            
-            results['students'][student_id] = {
-                'id': student_id,
-                'name': student_name,
-                'mid': mid_scaled,
-                'final': final_scaled,
-                'ct': ct_scaled,
-                'assignment': assignment_scaled,
-                'attendance': attendance_scaled,
-                'total_marks': total_marks,
-                'sgpa': sgpa,
-                'grade': grade,
-                'co_scores': co_scores,
-                'po_scores': po_scores,
-                'student_email': str(row.get('Student_Email', '')),
-                'parent_email': str(row.get('Parent_Email', '')),
-                'status': 'Pass' if total_marks >= 40 else 'Fail'
-            }
-            
-            co_scores_all.append(co_scores)
-            
-        except Exception as e:
-            st.warning(f"Error processing student {idx}: {str(e)}")
-    
-    # Calculate course statistics
-    if results['students']:
-        marks_list = [s['total_marks'] for s in results['students'].values()]
-        sgpas = [s['sgpa'] for s in results['students'].values()]
-        passing = [m for m in marks_list if m >= 40]
-        
-        results['course_stats'] = {
-            'average_marks': np.mean(marks_list),
-            'highest_marks': max(marks_list),
-            'lowest_marks': min(marks_list),
-            'average_sgpa': np.mean(sgpas),
-            'total_students': len(marks_list),
-            'passing_students': len(passing),
-            'pass_percentage': (len(passing) / len(marks_list) * 100) if marks_list else 0,
-            'fail_percentage': ((len(marks_list) - len(passing)) / len(marks_list) * 100) if marks_list else 0,
-            'std_deviation': np.std(marks_list)
-        }
-    
-    # Calculate CO attainment
-    if co_scores_all and co_scores_all[0]:
-        df_co = pd.DataFrame(co_scores_all)
-        # Convert to percentage (assumes max 20 per CO)
-        co_maxes = {}
-        for col in df_co.columns:
-            max_val = df_co[col].max()
-            co_maxes[col] = max(max_val, 1)  # Avoid division by zero
-        
-        results['co_attainment'] = {
-            col: (df_co[col].mean() / co_maxes[col] * 100) 
-            for col in df_co.columns
-        }
-        
-        # Calculate PO attainment if mapping exists
-        default_mapping = create_default_copo_mapping()
-        results['po_attainment'] = calculate_po_attainment(
-            {co: score / 20 * 100 for co, score in results['co_attainment'].items()},
-            default_mapping
-        )
-    
-    # Generate predictions
-    results['predictions'] = generate_ai_predictions(results)
-    
-    # Track upload and save
-    track_teacher_upload(teacher_username, semester, course_code, filename, len(results['students']))
-    save_course_data(semester, course_code, results)
-    
-    st.session_state.processed = True
-    st.session_state.results = results
-    
-    return results
-
-# ==============================================================================
-# AI PREDICTIONS (Kept from original with CO-PO integration)
-# ==============================================================================
-def generate_ai_predictions(results):
-    """Generate AI predictions using ML and CO-PO attainment"""
-    predictions = {}
-    if not results.get('students'):
-        return predictions
-    
-    students_data = []
-    student_ids = []
-    
-    for student_id, student in results['students'].items():
-        # Include CO scores in features
-        co_scores = list(student.get('co_scores', {}).values())
-        co_avg = np.mean(co_scores) if co_scores else 0
-        
-        features = [
-            student.get('total_marks', 0),
-            student.get('mid', 0),
-            student.get('final', 0),
-            student.get('ct', 0),
-            student.get('assignment', 0),
-            student.get('sgpa', 0),
-            co_avg  # Add CO average as feature
-        ]
-        students_data.append(features)
-        student_ids.append(student_id)
-    
-    if len(students_data) < 3:
-        # Not enough data for ML, use rule-based
-        for student_id, student in results['students'].items():
-            predictions[student_id] = generate_rule_based_prediction(student)
-        return predictions
-    
-    X = np.array(students_data)
-    
-    # Academic prediction model
-    y_academic = X[:, 0]
-    model_academic = LinearRegression()
-    model_academic.fit(X[:, 1:], y_academic)
-    
-    # Career prediction with CO-PO based sectors
-    career_sectors = [
-        "Power Systems & Energy",
-        "Electronics & Embedded Systems", 
-        "Telecommunications",
-        "Control & Automation",
-        "Research & Academia",
-        "Renewable Energy",
-        "AI & Machine Learning in EEE"
-    ]
-    
-    y_career = []
-    for features in X:
-        total_marks = features[0]
-        sgpa = features[5]
-        co_avg = features[6]
-        
-        # Career mapping based on performance and CO scores
-        if total_marks >= 80 and sgpa >= 3.5:
-            y_career.append(0)  # Research
-        elif total_marks >= 75:
-            y_career.append(1)  # Electronics
-        elif total_marks >= 70:
-            y_career.append(2)  # Telecom
-        elif total_marks >= 65 and co_avg >= 15:
-            y_career.append(3)  # Control
-        elif total_marks >= 60:
-            y_career.append(4)  # Academia
-        elif total_marks >= 50:
-            y_career.append(5)  # Renewable
-        else:
-            y_career.append(6)  # AI/ML
-    
-    model_career = RandomForestClassifier(n_estimators=50, random_state=42)
-    model_career.fit(X[:, 1:], y_career)
-    
-    for idx, student_id in enumerate(student_ids):
-        student = results['students'][student_id]
-        features = X[idx]
-        
-        # Predict next semester performance
-        next_sem_pred = model_academic.predict([features[1:]])[0]
-        next_sem_pred = max(40, min(95, next_sem_pred))
-        
-        # Predict career sector
-        career_idx = model_career.predict([features[1:]])[0]
-        career_sector = career_sectors[career_idx]
-        
-        # Calculate growth
-        current_marks = features[0]
-        growth_percent = ((next_sem_pred - current_marks) / current_marks * 100) if current_marks > 0 else 100
-        
-        # Performance assessment
-        if current_marks >= 80:
-            performance = "Excellent"
-            recommendation = "Consider graduate studies or research positions"
-        elif current_marks >= 70:
-            performance = "Good"
-            recommendation = "Focus on specialization in strong areas"
-        elif current_marks >= 60:
-            performance = "Average"
-            recommendation = "Improve weak areas through practice"
-        elif current_marks >= 40:
-            performance = "Satisfactory"
-            recommendation = "Maintain consistency and seek guidance"
-        else:
-            performance = "Needs Improvement"
-            recommendation = "Seek academic support"
-        
-        # Identify strengths from CO scores
-        co_scores = student.get('co_scores', {})
-        strengths = []
-        for co, score in co_scores.items():
-            if score >= 15:
-                strengths.append(f"Strong in {co}")
-        if not strengths:
-            strengths = ["Developing core engineering skills"]
-        
-        predictions[student_id] = {
-            'student_name': student['name'],
-            'current_performance': f"{current_marks:.1f} marks ({performance})",
-            'predicted_next_semester': f"{next_sem_pred:.1f} marks",
-            'growth_percentage': f"{growth_percent:.1f}%",
-            'recommended_career_sector': career_sector,
-            'key_strengths': strengths[:3],
-            'recommendation': recommendation,
-            'confidence_level': "Medium" if len(students_data) >= 5 else "Low"
-        }
-    
-    return predictions
-
-# ==============================================================================
-# RULE-BASED PREDICTION (Kept from original)
-# ==============================================================================
-def generate_rule_based_prediction(student):
-    """Generate rule-based predictions when insufficient data for ML"""
-    total_marks = student.get('total_marks', 0)
-    sgpa = student.get('sgpa', 0)
-    
-    if total_marks >= 80:
-        performance = "Excellent"
-        next_sem = min(95, total_marks + np.random.uniform(0, 5))
-        career = np.random.choice(["Research & Academia", "Power Systems Design", "Advanced Electronics"])
-        recommendation = "Pursue graduate studies or competitive industry positions"
-    elif total_marks >= 70:
-        performance = "Good"
-        next_sem = min(90, total_marks + np.random.uniform(-2, 8))
-        career = np.random.choice(["Energy Management", "Control Systems", "Telecommunications"])
-        recommendation = "Focus on specialization and internships"
-    elif total_marks >= 60:
-        performance = "Average"
-        next_sem = min(85, total_marks + np.random.uniform(-5, 10))
-        career = np.random.choice(["Renewable Energy", "Maintenance Engineering", "Technical Sales"])
-        recommendation = "Improve fundamentals and seek practical experience"
-    elif total_marks >= 40:
-        performance = "Satisfactory"
-        next_sem = max(40, total_marks + np.random.uniform(-10, 15))
-        career = "General Engineering with focused skill development"
-        recommendation = "Maintain consistency and seek academic guidance"
-    else:
-        performance = "Needs Improvement"
-        next_sem = max(30, total_marks + np.random.uniform(-5, 20))
-        career = "Foundation strengthening required"
-        recommendation = "Seek academic support and focus on core concepts"
-    
-    # Identify strengths
-    strengths = []
-    if student.get('mid', 0) >= 20:
-        strengths.append("Good exam preparation skills")
-    if student.get('final', 0) >= 30:
-        strengths.append("Strong comprehensive understanding")
-    if student.get('ct', 0) >= 15:
-        strengths.append("Consistent performance in assessments")
-    if student.get('assignment', 0) >= 4:
-        strengths.append("Good assignment completion")
-    
-    if not strengths:
-        strengths = ["Developing engineering competencies"]
-    
-    growth = ((next_sem - total_marks) / total_marks * 100) if total_marks > 0 else 100
-    
-    return {
-        'student_name': student['name'],
-        'current_performance': f"{total_marks:.1f} marks ({performance})",
-        'predicted_next_semester': f"{next_sem:.1f} marks",
-        'growth_percentage': f"{growth:.1f}%",
-        'recommended_career_sector': career,
-        'key_strengths': strengths[:3],
-        'recommendation': recommendation,
-        'confidence_level': "Low (Rule-based)"
-    }
-
-# ==============================================================================
-# UPLOAD PAGE (MODIFIED FOR DYNAMIC FORMAT)
-# ==============================================================================
-def organized_upload_page():
-    """Upload page that handles dynamic Excel formats"""
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown("<h3>Upload Student Data</h3>", unsafe_allow_html=True)
-    
-    # Help
-    col_title, col_help = st.columns([4, 1])
-    with col_help:
-        if st.button("Help", key="upload_help"):
-            st.info("""
-            **Upload Help:**
-            
-            1. **Download Template**: Get the Excel template
-            2. **Enter Details**: Provide semester, course code
-            3. **Upload File**: Select your Excel file
-            4. **Process Data**: Click process to analyze
-            
-            The system can handle various Excel formats with different CO and PO structures.
-            """)
-    
-    st.markdown("#### Step 1: Download Template")
-    excel_file = create_sample_excel()
-    st.download_button(
-        label="Download XLSX Template",
-        data=excel_file,
-        file_name="Course_Template.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True
-    )
-    
-    st.markdown("---")
-    st.markdown("#### Step 2: Enter Academic Details")
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        semester = st.text_input(
-            "Semester:",
-            value=get_current_semester(),
-            placeholder="e.g., Spring 2023"
-        )
-    with col2:
-        course_code = st.text_input(
-            "Course Code:",
-            value="",
-            placeholder="e.g., EEE 321"
-        )
-    with col3:
-        course_name = st.text_input(
-            "Course Name:",
-            value="",
-            placeholder="e.g., Power System I"
-        )
-    
-    st.markdown("---")
-    st.markdown("#### Step 3: Upload Your File")
-    
-    uploaded_file = st.file_uploader(
-        "Choose your Excel file",
-        type=['xlsx', 'xls'],
-        help="Upload the Excel file containing student marks"
-    )
-    
-    if uploaded_file is not None:
-        try:
-            # Parse the Excel file dynamically
-            all_data, co_po_info, sheet_names = parse_excel_file(uploaded_file)
-            
-            st.success(f"File uploaded successfully! Found {len(sheet_names)} sheets with student data.")
-            
-            # Show preview of sheets found
-            with st.expander("File Analysis", expanded=True):
-                st.markdown("**Sheets detected:**")
-                for sheet in sheet_names:
-                    st.markdown(f"- {sheet}")
+            if student_table_data:
+                df_students = pd.DataFrame(student_table_data)
+                st.dataframe(df_students, use_container_width=True, height=500, hide_index=True)
                 
-                if co_po_info:
-                    st.markdown("**CO-PO columns detected:**")
-                    for sheet, info in co_po_info.items():
-                        st.markdown(f"- {sheet}: {len(info['co_columns'])} COs, {len(info['po_columns'])} POs")
+                csv = df_students.to_csv(index=False)
+                st.download_button(
+                    label="📥 Download Student List (CSV)",
+                    data=csv,
+                    file_name=f"student_list_{course_data.get('course_code', 'COURSE')}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            else:
+                st.info("No students match your search")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+
+def show_student_analytics():
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("## 📈 Student Analytics Dashboard")
+    
+    student_id = ""
+    student_name = "Student"
+    
+    if st.session_state.user_type == "student":
+        student_id = st.session_state.user_data.get('student_id', '')
+        student_name = st.session_state.user_data.get('full_name', 'Student')
+    elif st.session_state.user_type == "parent":
+        student_id = st.session_state.user_data.get('student_linked', '')
+        users = load_users()
+        for s_info in users.get('students', {}).values():
+            if s_info.get('student_id') == student_id:
+                student_name = s_info.get('full_name', 'Your Child')
+                break
+    else:
+        all_courses = load_all_courses()
+        all_ids = set()
+        for cd in all_courses.values():
+            all_ids.update(cd.get('students', {}).keys())
+        
+        if all_ids:
+            student_id = st.selectbox("Select Student to View Analytics", sorted(list(all_ids)))
+    
+    if not student_id:
+        st.warning("No student ID found. Please ensure student accounts are properly set up.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+    
+    student_data = load_student_data(student_id)
+    
+    if not student_data:
+        st.info("No academic data found for this student. Please upload course data first.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+    
+    latest_course_key = sorted(student_data.keys())[-1] if student_data else None
+    latest_data = student_data.get(latest_course_key, {}) if latest_course_key else {}
+    latest_student = latest_data.get('student_data', {})
+    co_attainment = latest_data.get('co_attainment', {})
+    po_attainment = latest_data.get('po_attainment', {})
+    
+    st.markdown(f"**👤 Viewing analytics for:** {student_name} (ID: {student_id})")
+    
+    tab1, tab2, tab3 = st.tabs([
+        "📚 Course Results",
+        "🎯 CO Attainment", 
+        "📐 PO Attainment"
+    ])
+    
+    with tab1:
+        st.markdown("### 📚 Semester-wise Course Results")
+        course_list = []
+        for key, data in student_data.items():
+            sd = data.get('student_data', {})
+            course_list.append({
+                'Course Code': data.get('course_code', ''),
+                'Semester': data.get('semester', ''),
+                'Total Marks': f"{sd.get('total_marks', 0):.1f}",
+                'Grade': sd.get('grade', 'N/A'),
+                'SGPA': f"{sd.get('sgpa', 0):.2f}",
+                'Status': sd.get('status', 'N/A')
+            })
+        if course_list:
+            df = pd.DataFrame(course_list)
+            st.dataframe(df, use_container_width=True, hide_index=True)
             
-            # Process the data
-            st.markdown("---")
-            st.markdown("#### Step 4: Process Data")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Average Marks", f"{np.mean([float(c['Total Marks']) for c in course_list]):.1f}")
+            with col2:
+                st.metric("Average SGPA", f"{np.mean([float(c['SGPA']) for c in course_list]):.2f}")
+            with col3:
+                passed = len([c for c in course_list if c['Status'] == 'Pass'])
+                st.metric("Courses Passed", f"{passed}/{len(course_list)}")
+    
+    with tab2:
+        st.markdown("### 🎯 Course Outcome (CO) Attainment")
+        st.info("📌 These are **your individual CO attainment percentages** for each course.")
+        
+        for key, data in student_data.items():
+            co_pct = data.get('student_data', {}).get('co_attainment_pct', {})
+            if co_pct:
+                course_code = data.get('course_code', key)
+                st.markdown(f"**📘 {course_code}**")
+                cos = list(co_pct.keys())
+                vals = list(co_pct.values())
+                colors_bar = ['#4CAF50' if v >= 80 else '#FFC107' if v >= 60 else '#F44336' for v in vals]
+                
+                fig = go.Figure(data=[go.Bar(x=cos, y=vals, marker_color=colors_bar,
+                                            text=[f'{v:.1f}%' for v in vals], textposition='auto')])
+                fig.update_layout(title=f"CO Attainment - {course_code}", template='plotly_white',
+                                yaxis_title="Percentage (%)", height=300)
+                st.plotly_chart(fig, use_container_width=True)
+    
+    with tab3:
+        st.markdown("### 📐 Program Outcome (PO) Attainment")
+        st.info(f"📌 This shows **your individual PO attainment** based on your CO scores. Each student's PO attainment is unique.")
+        
+        for key, data in student_data.items():
+            po_scores = data.get('po_attainment', {})
+            student_po = data.get('student_data', {}).get('po_scores', {})
             
-            if st.button("Process & Analyze Data", use_container_width=True, type="primary"):
-                if not semester or not course_code:
-                    st.error("Please enter semester and course code")
+            display_po = student_po if student_po else po_scores
+            
+            if display_po:
+                course_code = data.get('course_code', key)
+                st.markdown(f"**📘 {course_code}**")
+                
+                pos = list(display_po.keys())
+                vals = list(display_po.values())
+                
+                if len(pos) >= 3:
+                    fig = create_spider_plot(vals, pos, f"PO Attainment - {course_code}")
+                    st.pyplot(fig)
                 else:
-                    with st.spinner("Processing data..."):
-                        # Extract CO-PO attainment
-                        attainment_data = extract_co_po_attainment(all_data, co_po_info)
-                        
-                        # Process student data
-                        if sheet_names:
-                            # Use the first sheet with student data
-                            main_sheet = sheet_names[0]
-                            df = all_data[main_sheet]['data']
-                            
-                            # Handle the dataframe based on its structure
-                            results = process_student_data(
-                                df, semester, course_code,
-                                st.session_state.username,
-                                uploaded_file.name
-                            )
-                            
-                            # Add CO-PO attainment data
-                            results['co_attainment'] = attainment_data.get('co_attainment', {})
-                            results['po_attainment'] = attainment_data.get('po_attainment', {})
-                            
-                            st.session_state.results = results
-                            key = f"{semester} - {course_code}"
-                            st.session_state.all_semester_data[key] = results
-                            
-                            st.success("Data processing complete!")
-                            
-                            # Quick summary
-                            st.markdown("##### Quick Summary")
-                            stats = results['course_stats']
-                            col_sum1, col_sum2, col_sum3 = st.columns(3)
-                            with col_sum1:
-                                st.metric("Total Students", stats['total_students'])
-                            with col_sum2:
-                                st.metric("Average Marks", f"{stats['average_marks']:.1f}")
-                            with col_sum3:
-                                st.metric("Pass Rate", f"{stats['pass_percentage']:.1f}%")
-                        
-        except Exception as e:
-            st.error(f"Error processing file: {str(e)}")
-            st.info("Please ensure your file follows the expected format")
+                    fig = go.Figure(data=[go.Bar(x=pos, y=vals, marker_color='#764ba2',
+                                                text=[f'{v:.1f}%' for v in vals], textposition='auto')])
+                    fig.update_layout(title=f"PO Attainment - {course_code}", template='plotly_white',
+                                    yaxis_title="Percentage (%)", height=300)
+                    st.plotly_chart(fig, use_container_width=True)
     
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ==============================================================================
-# MAIN APPLICATION (MODIFIED NAVIGATION)
-# ==============================================================================
-def main():
-    """Main application controller"""
-    try:
-        apply_professional_theme()
-        
-        if not st.session_state.logged_in:
-            if st.session_state.current_page == "register":
-                show_registration_page()
-            elif st.session_state.current_page == "forgot_password":
-                show_forgot_password_page()
-            else:
-                show_login_page()
-            return
-        
-        show_sidebar()
-        
-        if st.session_state.get('show_about', False):
-            show_about_page()
-            show_footer()
-            return
-        
-        # Navigation based on user type and current page
-        if st.session_state.current_page == "dashboard":
-            if st.session_state.user_type in ["teacher", "admin"]:
-                show_dashboard()
-            else:
-                st.session_state.current_page = "student_analytics"
-                st.rerun()
-        
-        elif st.session_state.current_page == "upload":
-            if st.session_state.user_type in ["teacher", "admin"]:
-                organized_upload_page()
-            else:
-                st.error("Access Denied: You don't have permission to access this page.")
-                st.session_state.current_page = "student_analytics"
-                st.rerun()
-        
-        elif st.session_state.current_page == "course_reports":
-            if st.session_state.user_type in ["teacher", "admin"]:
-                show_course_reports()
-            else:
-                st.error("Access Denied: You don't have permission to access this page.")
-                st.session_state.current_page = "student_analytics"
-                st.rerun()
-        
-        elif st.session_state.current_page == "student_analytics":
-            show_student_analytics()
-        
-        elif st.session_state.current_page == "admin_panel":
-            if st.session_state.user_type == "admin":
-                show_admin_panel()
-            else:
-                st.error("Access Denied: Admin privileges required.")
-                st.session_state.current_page = "student_analytics"
-                st.rerun()
-        
-        else:
-            if st.session_state.user_type in ["parent", "student"]:
-                st.session_state.current_page = "student_analytics"
-                st.rerun()
-            else:
-                show_dashboard()
-        
-        show_footer()
-    
-    except Exception as e:
-        st.error("An unexpected error occurred.")
-        with st.expander("Technical Details"):
-            st.error(f"Error: {str(e)}")
-            import traceback
-            st.code(traceback.format_exc())
 
-# ==============================================================================
-# RUN APPLICATION
-# ==============================================================================
-if __name__ == "__main__":
-    Path("course_data").mkdir(exist_ok=True)
+def show_teacher_panel():
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("## 👨‍🏫 Create User Account")
     
-    if not os.path.exists("users_enhanced.json"):
+    tab1, tab2 = st.tabs(["👥 Create Student & Parent Account", "📋 Upload History"])
+    
+    with tab1:
+        with st.form("create_student_parent_teacher"):
+            st.markdown("#### Student Information")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                student_id = st.text_input("Student ID*", placeholder="EEE 078 07759")
+                student_name = st.text_input("Student Full Name*")
+                student_username = st.text_input("Student Username*", placeholder="Choose a username")
+                student_password = st.text_input("Student Password*", type="password", placeholder="Choose a password")
+            
+            with col2:
+                student_semester = st.text_input("Semester*", value=get_current_semester())
+                student_email = st.text_input("Student Email (optional)")
+            
+            st.markdown("---")
+            st.markdown("#### Parent/Guardian Information")
+            col3, col4 = st.columns(2)
+            
+            with col3:
+                parent_name = st.text_input("Parent Full Name*")
+                parent_relationship = st.selectbox("Relationship*", ["Father", "Mother", "Guardian"])
+                parent_username = st.text_input("Parent Username*", placeholder="Choose a username")
+                parent_password = st.text_input("Parent Password*", type="password", placeholder="Choose a password")
+            
+            with col4:
+                parent_email = st.text_input("Parent Email*")
+                parent_contact = st.text_input("Parent Contact Number*")
+            
+            if st.form_submit_button("✅ Create Accounts", use_container_width=True, type="primary"):
+                errors = []
+                if not student_id: errors.append("Student ID required")
+                if not student_name: errors.append("Student Name required")
+                if not student_username: errors.append("Student Username required")
+                if not student_password: errors.append("Student Password required")
+                if not parent_name: errors.append("Parent Name required")
+                if not parent_email: errors.append("Parent Email required")
+                if not parent_username: errors.append("Parent Username required")
+                if not parent_password: errors.append("Parent Password required")
+                
+                if errors:
+                    for e in errors: st.error(f"❌ {e}")
+                else:
+                    users = load_users()
+                    
+                    if student_username in users.get('students', {}):
+                        st.error(f"Student username '{student_username}' already exists!")
+                    elif parent_username in users.get('parents', {}):
+                        st.error(f"Parent username '{parent_username}' already exists!")
+                    else:
+                        users['students'][student_username] = {
+                            "username": student_username,
+                            "password": hash_password(student_password),
+                            "email": student_email or parent_email,
+                            "full_name": student_name,
+                            "student_id": student_id,
+                            "user_type": "student",
+                            "is_active": True,
+                            "semester": student_semester,
+                            "parent_email": parent_email,
+                            "parent_contact": parent_contact,
+                            "parent_name": parent_name,
+                            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "created_by": st.session_state.username
+                        }
+                        
+                        users['parents'][parent_username] = {
+                            "username": parent_username,
+                            "password": hash_password(parent_password),
+                            "email": parent_email,
+                            "full_name": f"{parent_name} ({parent_relationship})",
+                            "student_linked": student_id,
+                            "user_type": "parent",
+                            "is_active": True,
+                            "contact_no": parent_contact,
+                            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "created_by": st.session_state.username
+                        }
+                        
+                        if save_users(users):
+                            st.success(f"✅ Accounts created! Student: `{student_username}`, Parent: `{parent_username}`")
+                            log_activity(st.session_state.username, "created_accounts", f"Student: {student_username}")
+                            time.sleep(1.5)
+                            st.rerun()
+    
+    with tab2:
+        st.markdown("### 📋 Upload History")
+        uploads = st.session_state.teacher_uploads.get(st.session_state.username, [])
+        
+        if uploads:
+            upload_data = []
+            for upload in reversed(uploads):
+                upload_data.append({
+                    'Date': upload.get('timestamp', ''),
+                    'Semester': upload.get('semester', ''),
+                    'Course Code': upload.get('course_code', ''),
+                    'Students': upload.get('student_count', 0)
+                })
+            st.dataframe(pd.DataFrame(upload_data), use_container_width=True)
+        else:
+            st.info("ℹ️ No uploads yet")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def show_admin_panel():
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("## 👑 Admin Panel")
+    
+    tab1, tab2, tab3, tab4 = st.tabs(["👥 Create Accounts", "🔧 User Management", "💾 Data Management", "📜 Activity Log"])
+    
+    with tab1:
+        col_a, col_b = st.columns(2)
+        
+        with col_a:
+            st.markdown("### 👨‍🏫 Create Teacher")
+            with st.form("admin_teacher"):
+                t_user = st.text_input("Username*")
+                t_pass = st.text_input("Password*", type="password")
+                t_name = st.text_input("Full Name*")
+                t_email = st.text_input("Email*")
+                
+                if st.form_submit_button("Create Teacher", use_container_width=True):
+                    if all([t_user, t_pass, t_name, t_email]):
+                        users = load_users()
+                        if t_user not in users.get('teachers', {}):
+                            users['teachers'][t_user] = {
+                                "username": t_user,
+                                "password": hash_password(t_pass),
+                                "email": t_email,
+                                "full_name": t_name,
+                                "user_type": "teacher",
+                                "is_active": True,
+                                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            }
+                            save_users(users)
+                            st.success(f"✅ Teacher '{t_user}' created!")
+                            log_activity(st.session_state.username, "created_teacher", t_user)
+                        else:
+                            st.error("Username exists")
+        
+        with col_b:
+            st.markdown("### 👨‍🎓 Create Student & Parent")
+            with st.form("admin_student"):
+                st.markdown("**Student Information**")
+                col_s1, col_s2 = st.columns(2)
+                with col_s1:
+                    s_id = st.text_input("Student ID*", placeholder="EEE 078 07759")
+                    s_name = st.text_input("Student Full Name*")
+                    s_username = st.text_input("Student Username*", placeholder="Choose username")
+                    s_password = st.text_input("Student Password*", type="password", placeholder="Choose password")
+                with col_s2:
+                    s_email = st.text_input("Student Email")
+                    s_sem = st.text_input("Semester*", value=get_current_semester())
+                
+                st.markdown("**Parent/Guardian Information**")
+                col_p1, col_p2 = st.columns(2)
+                with col_p1:
+                    p_name = st.text_input("Parent Full Name*")
+                    p_username = st.text_input("Parent Username*", placeholder="Choose username")
+                    p_password = st.text_input("Parent Password*", type="password", placeholder="Choose password")
+                with col_p2:
+                    p_email = st.text_input("Parent Email*")
+                    p_contact = st.text_input("Parent Contact No.")
+                
+                if st.form_submit_button("Create Accounts", use_container_width=True, type="primary"):
+                    errors = []
+                    if not s_id: errors.append("Student ID required")
+                    if not s_name: errors.append("Student Name required")
+                    if not s_username: errors.append("Student Username required")
+                    if not s_password: errors.append("Student Password required")
+                    if not p_name: errors.append("Parent Name required")
+                    if not p_email: errors.append("Parent Email required")
+                    if not p_username: errors.append("Parent Username required")
+                    if not p_password: errors.append("Parent Password required")
+                    
+                    if errors:
+                        for e in errors:
+                            st.error(e)
+                    else:
+                        users = load_users()
+                        
+                        if s_username in users.get('students', {}):
+                            st.error(f"Student username '{s_username}' already exists!")
+                        elif p_username in users.get('parents', {}):
+                            st.error(f"Parent username '{p_username}' already exists!")
+                        elif s_username in users.get('teachers', {}):
+                            st.error(f"Username '{s_username}' is already taken by a teacher!")
+                        elif p_username in users.get('teachers', {}):
+                            st.error(f"Username '{p_username}' is already taken by a teacher!")
+                        else:
+                            users['students'][s_username] = {
+                                "username": s_username,
+                                "password": hash_password(s_password),
+                                "email": s_email or p_email,
+                                "full_name": s_name,
+                                "student_id": s_id,
+                                "user_type": "student",
+                                "is_active": True,
+                                "semester": s_sem,
+                                "parent_email": p_email,
+                                "parent_contact": p_contact,
+                                "parent_name": p_name,
+                                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                "created_by": st.session_state.username
+                            }
+                            
+                            users['parents'][p_username] = {
+                                "username": p_username,
+                                "password": hash_password(p_password),
+                                "email": p_email,
+                                "full_name": p_name,
+                                "student_linked": s_id,
+                                "user_type": "parent",
+                                "is_active": True,
+                                "contact_no": p_contact,
+                                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                "created_by": st.session_state.username
+                            }
+                            
+                            if save_users(users):
+                                st.success(f"✅ Accounts created! Student: `{s_username}` | Parent: `{p_username}`")
+                                log_activity(st.session_state.username, "created_accounts", f"Student: {s_username}, Parent: {p_username}")
+                                time.sleep(1.5)
+                                st.rerun()
+    
+    with tab2:
+        st.markdown("### 🔧 User Management")
         users = load_users()
-        save_users(users)
+        user_type = st.selectbox("Filter by Type", ["teachers", "students", "parents", "admins"])
+        
+        if user_type in users:
+            user_list = []
+            for u, d in users[user_type].items():
+                user_list.append({
+                    'Username': u,
+                    'Name': d.get('full_name', ''),
+                    'Email': d.get('email', ''),
+                    'Status': 'Active' if d.get('is_active', True) else 'Inactive',
+                    'Created': d.get('created_at', 'N/A')
+                })
+            
+            if user_list:
+                df_users = pd.DataFrame(user_list)
+                st.dataframe(df_users, use_container_width=True, hide_index=True)
+                
+                st.markdown("---")
+                st.markdown("#### Toggle User Status")
+                col_u1, col_u2 = st.columns(2)
+                
+                with col_u1:
+                    selected_user = st.selectbox("Select User", list(users[user_type].keys()), key="user_select")
+                
+                with col_u2:
+                    current_status = users[user_type][selected_user].get('is_active', True)
+                    new_status = st.selectbox("Set Status", ["Active", "Inactive"], index=0 if current_status else 1)
+                    
+                    if st.button("Update Status", use_container_width=True):
+                        users[user_type][selected_user]['is_active'] = (new_status == "Active")
+                        save_users(users)
+                        st.success(f"✅ Updated {selected_user} status to {new_status}")
+                        log_activity(st.session_state.username, "user_status_change", f"{selected_user}: {new_status}")
+                        st.rerun()
+            else:
+                st.info(f"No {user_type} found")
     
-    if not os.path.exists("teacher_uploads.json"):
-        save_teacher_uploads({})
+    with tab3:
+        st.markdown("### 💾 Data Management")
+        
+        col_d1, col_d2 = st.columns(2)
+        
+        with col_d1:
+            st.markdown("#### System Backup")
+            if st.button("Create Full System Backup", use_container_width=True):
+                backup_data = {
+                    'users': load_users(),
+                    'activity_log': st.session_state.activity_log,
+                    'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'backup_version': '1.0'
+                }
+                
+                backup_json = json.dumps(backup_data, indent=4, default=str)
+                st.download_button(
+                    label="Download Backup File",
+                    data=backup_json,
+                    file_name=f"edutrack_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                    mime="application/json",
+                    use_container_width=True
+                )
+                log_activity(st.session_state.username, "created_backup", "Full system backup")
+        
+        with col_d2:
+            st.markdown("#### Course Data Export")
+            
+            all_courses = load_all_courses()
+            if all_courses:
+                st.info(f"Total courses stored: {len(all_courses)}")
+                
+                export_data = {
+                    'courses': {},
+                    'export_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+                
+                for key, course in all_courses.items():
+                    export_data['courses'][key] = {
+                        'semester': course.get('semester', ''),
+                        'course_code': course.get('course_code', ''),
+                        'course_name': course.get('course_name', ''),
+                        'teacher': course.get('teacher', ''),
+                        'course_stats': course.get('course_stats', {}),
+                        'student_count': len(course.get('students', {}))
+                    }
+                
+                export_json = json.dumps(export_data, indent=4, default=str)
+                st.download_button(
+                    label="Export Course Summary",
+                    data=export_json,
+                    file_name=f"course_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                    mime="application/json",
+                    use_container_width=True
+                )
+            else:
+                st.warning("No course data available")
+        
+        st.markdown("---")
+        st.markdown("#### Reset Options")
+        st.warning("⚠️ These actions are irreversible. Please create a backup before proceeding.")
+        
+        col_r1, col_r2, col_r3 = st.columns(3)
+        
+        with col_r1:
+            if st.button("Reset Course Data", use_container_width=True):
+                st.session_state.show_reset_confirm = "courses"
+                st.rerun()
+        
+        with col_r2:
+            if st.button("Reset Activity Log", use_container_width=True):
+                st.session_state.show_reset_confirm = "activity"
+                st.rerun()
+        
+        with col_r3:
+            if st.button("Reset All Data", use_container_width=True, type="secondary"):
+                st.session_state.show_reset_confirm = "all"
+                st.rerun()
+        
+        if st.session_state.get('show_reset_confirm'):
+            st.markdown("---")
+            reset_type = st.session_state.show_reset_confirm
+            
+            if reset_type == "courses":
+                st.error("⚠️ Are you sure you want to delete ALL course data?")
+                st.markdown("This will remove all uploaded course results and student data.")
+                
+                col_confirm1, col_confirm2 = st.columns(2)
+                with col_confirm1:
+                    if st.button("Yes, Delete All Course Data", use_container_width=True):
+                        try:
+                            data_dir = Path("course_data")
+                            if data_dir.exists():
+                                for file in data_dir.glob("*"):
+                                    file.unlink()
+                            st.success("All course data has been deleted")
+                            log_activity(st.session_state.username, "reset_data", "Deleted all course data")
+                            st.session_state.show_reset_confirm = None
+                            time.sleep(1.5)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+                
+                with col_confirm2:
+                    if st.button("Cancel", use_container_width=True):
+                        st.session_state.show_reset_confirm = None
+                        st.rerun()
+            
+            elif reset_type == "activity":
+                st.error("⚠️ Are you sure you want to clear the activity log?")
+                
+                col_confirm1, col_confirm2 = st.columns(2)
+                with col_confirm1:
+                    if st.button("Yes, Clear Activity Log", use_container_width=True):
+                        st.session_state.activity_log = []
+                        st.success("Activity log cleared")
+                        log_activity(st.session_state.username, "reset_data", "Cleared activity log")
+                        st.session_state.show_reset_confirm = None
+                        time.sleep(1.5)
+                        st.rerun()
+                
+                with col_confirm2:
+                    if st.button("Cancel", use_container_width=True):
+                        st.session_state.show_reset_confirm = None
+                        st.rerun()
+            
+            elif reset_type == "all":
+                st.error("⚠️ WARNING: This will delete ALL data including courses, models, and logs!")
+                
+                col_confirm1, col_confirm2 = st.columns(2)
+                with col_confirm1:
+                    if st.button("Yes, Delete Everything", use_container_width=True, type="secondary"):
+                        try:
+                            data_dir = Path("course_data")
+                            if data_dir.exists():
+                                for file in data_dir.glob("*"):
+                                    file.unlink()
+                            
+                            ml_dir = Path("ml_models")
+                            if ml_dir.exists():
+                                for file in ml_dir.glob("*"):
+                                    file.unlink()
+                            
+                            st.session_state.activity_log = []
+                            
+                            st.success("All data has been reset")
+                            log_activity(st.session_state.username, "reset_data", "Full system reset")
+                            st.session_state.show_reset_confirm = None
+                            time.sleep(1.5)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+                
+                with col_confirm2:
+                    if st.button("Cancel", use_container_width=True):
+                        st.session_state.show_reset_confirm = None
+                        st.rerun()
     
+    with tab4:
+        st.markdown("### 📜 Activity Log")
+        st.markdown("Track all system activities and user actions")
+        
+        activity_log = st.session_state.activity_log
+        
+        if activity_log:
+            col_al1, col_al2 = st.columns([3, 1])
+            
+            with col_al1:
+                st.info(f"Total activities logged: {len(activity_log)}")
+            
+            with col_al2:
+                if st.button("Refresh Log", use_container_width=True):
+                    st.rerun()
+            
+            col_f1, col_f2 = st.columns(2)
+            with col_f1:
+                all_actions = list(set(log['action'] for log in activity_log))
+                filter_action = st.selectbox("Filter by Action", ["All"] + all_actions)
+            
+            with col_f2:
+                search_user = st.text_input("Search by Username", placeholder="Type username...")
+            
+            filtered_logs = activity_log.copy()
+            if filter_action != "All":
+                filtered_logs = [log for log in filtered_logs if log['action'] == filter_action]
+            if search_user:
+                filtered_logs = [log for log in filtered_logs if search_user.lower() in log['username'].lower()]
+            
+            log_data = []
+            for log in reversed(filtered_logs):
+                log_data.append({
+                    'Timestamp': log.get('timestamp', 'N/A'),
+                    'Username': log.get('username', 'N/A'),
+                    'Action': log.get('action', 'N/A'),
+                    'Details': log.get('details', '')[:50] + ('...' if len(log.get('details', '')) > 50 else '')
+                })
+            
+            if log_data:
+                df_logs = pd.DataFrame(log_data)
+                st.dataframe(df_logs, use_container_width=True, hide_index=True, height=400)
+                
+                export_log = pd.DataFrame([{
+                    'Timestamp': log.get('timestamp', ''),
+                    'Username': log.get('username', ''),
+                    'Action': log.get('action', ''),
+                    'Details': log.get('details', '')
+                } for log in reversed(activity_log)])
+                
+                csv_log = export_log.to_csv(index=False)
+                st.download_button(
+                    label="Download Activity Log (CSV)",
+                    data=csv_log,
+                    file_name=f"activity_log_{datetime.now().strftime('%Y%m%d')}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            else:
+                st.info("No matching activities found")
+        else:
+            st.info("No activity logged yet. System activities will appear here as users interact with the platform.")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def show_sidebar():
+    with st.sidebar:
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <h1 style="font-size: 3rem;">🎓</h1>
+            <h3>EduTrack Pro 2026</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"""
+        <div style="background: #667eea; color: white; padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+            <strong>{st.session_state.user_data.get('full_name', 'User')}</strong><br>
+            <small>{st.session_state.user_type.title()}</small>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("### 🧭 Navigation")
+        
+        if st.session_state.user_type in ["teacher", "admin"]:
+            if st.button("📤 Upload Data", use_container_width=True):
+                st.session_state.current_page = "upload"
+                st.rerun()
+            if st.button("📊 Course Reports", use_container_width=True):
+                st.session_state.current_page = "reports"
+                st.rerun()
+        
+        if st.button("📈 Student Analytics", use_container_width=True):
+            st.session_state.current_page = "student_analytics"
+            st.rerun()
+        
+        if st.session_state.user_type == "teacher":
+            if st.button("👥 Create User Account", use_container_width=True):
+                st.session_state.current_page = "teacher_panel"
+                st.rerun()
+        
+        if st.session_state.user_type == "admin":
+            if st.button("👑 Admin Panel", use_container_width=True):
+                st.session_state.current_page = "admin_panel"
+                st.rerun()
+        
+        st.markdown("---")
+        
+        # Change Password Button (for all users except maybe guests)
+        if st.button("🔐 Change Password", use_container_width=True):
+            st.session_state.show_change_password = True
+            st.session_state.current_page = "change_password"
+            st.rerun()
+        
+        if st.button("🚪 Logout", use_container_width=True, type="secondary"):
+            for key in ['logged_in', 'user_type', 'username', 'user_data']:
+                st.session_state[key] = False if key == 'logged_in' else ""
+            st.session_state.current_page = "login"
+            st.session_state.show_change_password = False
+            st.rerun()
+
+
+# MAIN APP
+def main():
+    apply_professional_theme()
+    
+    if not st.session_state.logged_in:
+        show_login_page()
+        return
+    
+    # Handle change password page
+    if st.session_state.get('show_change_password', False) or st.session_state.current_page == "change_password":
+        show_change_password_page()
+        show_sidebar()
+        return
+    
+    show_sidebar()
+    
+    page = st.session_state.current_page
+    
+    if page == "upload" and st.session_state.user_type in ["teacher", "admin"]:
+        show_upload_page()
+    elif page == "reports" and st.session_state.user_type in ["teacher", "admin"]:
+        show_course_reports()
+    elif page == "student_analytics":
+        show_student_analytics()
+    elif page == "teacher_panel" and st.session_state.user_type == "teacher":
+        show_teacher_panel()
+    elif page == "admin_panel" and st.session_state.user_type == "admin":
+        show_admin_panel()
+    else:
+        show_upload_page() if st.session_state.user_type in ["teacher", "admin"] else show_student_analytics()
+    
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; padding: 10px; color: #666;">
+        <p>EduTrack Pro 2026 | Department of EEE | Stamford University Bangladesh</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+if __name__ == "__main__":
+    # Import pickle for data persistence
+    import pickle
+    Path("course_data").mkdir(exist_ok=True)
     main()
